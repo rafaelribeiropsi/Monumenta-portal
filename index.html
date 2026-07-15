@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal Monumenta — Estrutura, Pessoas e Custos</title>
+<style>
+:root{
+  --dark:#111111; --lime:#c8f135; --white:#ffffff; --grey:#8a8a8a; --grey-light:#f2f2f2;
+  --red:#e74c3c; --orange:#e67e22; --green:#27ae60; --card:#1b1b1b;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;color:#222;}
+header{background:var(--dark);color:var(--white);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+header .brand{font-weight:800;color:var(--lime);font-size:18px;letter-spacing:0.5px;}
+header .sub{font-size:11px;color:#aaa;margin-top:2px;}
+header .right{display:flex;align-items:center;gap:14px;}
+header button.link{background:none;border:1px solid #444;color:#ccc;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Arial;}
+header button.link:hover{color:#fff;border-color:#888;}
+.banner{background:var(--orange);color:#1a1a1a;text-align:center;padding:8px 12px;font-size:13px;font-weight:bold;}
+nav{display:flex;gap:4px;background:#1b1b1b;padding:0 20px;overflow-x:auto;}
+nav button{background:none;border:none;color:#ccc;padding:14px 18px;font-size:14px;cursor:pointer;border-bottom:3px solid transparent;font-family:Arial;white-space:nowrap;}
+nav button.active{color:var(--lime);border-bottom-color:var(--lime);font-weight:bold;}
+nav button:hover{color:#fff;}
+main{padding:24px;max-width:1400px;margin:0 auto;}
+.tab{display:none;} .tab.active{display:block;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid var(--lime);}
+.card .num{font-size:28px;font-weight:800;color:var(--dark);}
+.card .label{font-size:12px;color:#666;margin-top:4px;}
+.card.alert{border-left-color:var(--red);}
+.card.warn{border-left-color:var(--orange);}
+h2{color:var(--dark);border-bottom:2px solid var(--lime);padding-bottom:6px;display:inline-block;}
+.pend-list{background:#fff;border-radius:10px;padding:0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.pend-item{padding:12px 16px;border-bottom:1px solid #eee;font-size:13px;}
+.pend-item:last-child{border-bottom:none;}
+.sev{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;color:#fff;margin-right:8px;}
+.sev-Bloqueadora{background:var(--red);} .sev-Crítica{background:#c0392b;} .sev-Alta{background:var(--orange);}
+.controls{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+select,input[type=text],input[type=password],textarea{padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:14px;font-family:Arial;}
+input[type=text]{flex:1;min-width:220px;}
+.toggle{display:flex;background:#ddd;border-radius:20px;overflow:hidden;}
+.toggle button{border:none;background:none;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:bold;color:#555;font-family:Arial;}
+.toggle button.on{background:var(--dark);color:var(--lime);}
+.org-canvas{background:var(--dark);border-radius:12px;padding:30px 10px 40px;min-height:400px;}
+.level-row{margin-bottom:28px;}
+.level-label{color:var(--lime);font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:10px;font-weight:bold;}
+.level-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
+.person-card{width:110px;text-align:center;}
+.avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(--lime);object-fit:cover;background:#333;margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--lime);font-weight:bold;font-size:20px;filter:grayscale(60%);}
+.person-card img.avatar{filter:grayscale(100%);}
+.p-name{color:#fff;font-size:11px;font-weight:bold;margin-top:6px;line-height:1.2;}
+.p-role{color:var(--lime);font-size:9.5px;margin-top:2px;line-height:1.2;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+th{background:var(--dark);color:var(--lime);text-align:left;padding:10px 12px;font-size:12px;}
+td{padding:9px 12px;font-size:13px;border-bottom:1px solid #eee;}
+tr:nth-child(even) td{background:#fafafa;}
+tr.row-clickable{cursor:pointer;}
+tr.row-clickable:hover td{background:#eef7d8;}
+.row-person{display:flex;align-items:center;gap:8px;}
+.mini-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#666;filter:grayscale(60%);}
+.badge{padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:bold;color:#fff;}
+.badge-Diretor-Técnico{background:#2c3e50;} .badge-Coordenador{background:#16a085;}
+.badge-Sênior{background:#2980b9;} .badge-Pleno{background:#27ae60;} .badge-Júnior{background:#f39c12;}
+.badge-default{background:#7f8c8d;}
+.badge-status-Pendente{background:#e67e22;} .badge-status-Validado{background:#27ae60;} .badge-status-Rejeitado{background:#c0392b;}
+.footer-note{color:#999;font-size:11px;text-align:center;margin:30px 0 10px;}
+.money{font-family:'Courier New',monospace;}
+.confidential{color:var(--red);font-weight:bold;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-label{width:180px;font-size:12px;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;background:#eee;border-radius:4px;height:20px;position:relative;overflow:hidden;}
+.bar-fill{background:var(--lime);height:100%;border-radius:4px;}
+.bar-value{font-size:11px;font-weight:bold;margin-left:8px;white-space:nowrap;}
+
+/* login screen */
+#loginScreen{max-width:460px;margin:80px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+#loginScreen h1{color:var(--dark);font-size:20px;margin-top:0;}
+#loginScreen p{font-size:13px;color:#555;line-height:1.5;}
+#loginScreen input{width:100%;margin:12px 0;}
+#loginScreen button.primary{background:var(--dark);color:var(--lime);border:none;padding:12px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;width:100%;font-family:Arial;}
+#loginScreen .err{color:var(--red);font-size:13px;margin-top:8px;}
+#loginScreen details{margin-top:16px;font-size:12px;color:#555;}
+#loginScreen details ol{padding-left:18px;line-height:1.6;}
+#loadingScreen{max-width:460px;margin:120px auto;text-align:center;color:#777;font-size:14px;}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal{background:#fff;border-radius:12px;padding:24px;width:420px;max-width:92vw;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.modal h3{margin-top:0;color:var(--dark);}
+.modal label{display:block;font-size:12px;font-weight:bold;color:#555;margin:14px 0 4px;}
+.modal input,.modal select,.modal textarea{width:100%;}
+.modal textarea{min-height:60px;font-family:Arial;resize:vertical;}
+.modal .actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.modal button{padding:10px 18px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;font-family:Arial;font-size:13px;}
+.modal button.save{background:var(--dark);color:var(--lime);}
+.modal button.cancel{background:#eee;color:#555;}
+.modal .msg{font-size:12px;margin-top:10px;}
+.modal .msg.ok{color:var(--green);} .modal .msg.err{color:var(--red);}
+.edit-icon{opacity:0.5;margin-left:6px;font-size:12px;}
+tr.row-clickable:hover .edit-icon{opacity:1;}
+
+.log-item{background:#fff;border-radius:10px;padding:12px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);font-size:13px;}
+.log-item .who{font-weight:bold;color:var(--dark);}
+.log-item .when{color:#888;font-size:11.5px;}
+.log-item a{color:#2980b9;text-decoration:none;font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none">
+  <h1>Portal Monumenta</h1>
+  <p>Acesso restrito a RH e liderança sênior. Cole abaixo seu token de acesso pessoal do GitHub
+  (com permissão apenas no repositório de dados privado) para entrar.</p>
+  <input type="password" id="tokenInput" placeholder="cole aqui seu token (ghp_... ou github_pat_...)">
+  <button class="primary" id="btnLogin">Entrar</button>
+  <div class="err" id="loginErr"></div>
+  <details>
+    <summary>Não sei como gerar meu token</summary>
+    <ol>
+      <li>Acesse github.com → foto de perfil → Settings.</li>
+      <li>No menu esquerdo, role até "Developer settings".</li>
+      <li>Clique em "Personal access tokens" → "Fine-grained tokens" → "Generate new token".</li>
+      <li>Em "Resource owner" escolha o dono do repositório. Em "Repository access" escolha "Only select repositories" e marque <b>monumentabaserh</b>.</li>
+      <li>Em "Permissions" → "Repository permissions" → "Contents" → selecione "Read and write".</li>
+      <li>Gere o token e cole aqui. Guarde-o — o GitHub só mostra uma vez.</li>
+    </ol>
+  </details>
+</div>
+
+<div id="loadingScreen" style="display:none">Carregando dados do repositório...</div>
+
+<div id="app" style="display:none">
+<div class="banner" id="bannerAviso"></div>
+<header>
+  <div><div class="brand">MONUMENTA</div><div class="sub">Portal de Estrutura, Pessoas e Custos</div></div>
+  <div class="right">
+    <div class="sub" id="lastSync"></div>
+    <button class="link" id="btnLogout">Sair</button>
+  </div>
+</header>
+<nav>
+  <button data-tab="geral" class="active">Visão Geral</button>
+  <button data-tab="organograma">Organograma por Área</button>
+  <button data-tab="pessoas">Pessoas</button>
+  <button data-tab="valores">Valores</button>
+  <button data-tab="log">Log de Alterações</button>
+</nav>
+<main>
+
+  <section class="tab active" id="tab-geral">
+    <h2>Visão Geral</h2>
+    <div class="cards" id="cardsGeral"></div>
+    <h2>Pendências que mais importam agora</h2>
+    <div class="pend-list" id="pendList"></div>
+  </section>
+
+  <section class="tab" id="tab-organograma">
+    <h2>Organograma por Área</h2>
+    <div class="controls">
+      <select id="areaSelect"></select>
+    </div>
+    <div class="org-canvas" id="orgCanvas"></div>
+  </section>
+
+  <section class="tab" id="tab-pessoas">
+    <h2>Pessoas</h2>
+    <p style="font-size:12.5px;color:#777">Clique em uma pessoa para corrigir gestor direto, área ou status de validação. Cada correção gera um registro no Log de Alterações.</p>
+    <div class="controls">
+      <input type="text" id="searchPessoas" placeholder="Buscar por nome, cargo ou área...">
+      <select id="filtroArea"><option value="">Todas as áreas</option></select>
+      <select id="filtroSenioridade"><option value="">Toda senioridade</option></select>
+    </div>
+    <table id="tabelaPessoas">
+      <thead><tr><th>Pessoa</th><th>Área</th><th>Cargo</th><th>Senioridade</th><th>Gestor Direto</th><th>Validação</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="tab" id="tab-valores">
+    <h2>Valores</h2>
+    <div class="controls">
+      <div class="toggle" id="modoToggle">
+        <button data-modo="gestao" class="on">Visão Gestão</button>
+        <button data-modo="rh">Visão RH (confidencial)</button>
+      </div>
+    </div>
+    <h3 id="tituloEquipes">Por equipe</h3>
+    <div id="valoresEquipe"></div>
+    <h3 id="tituloIndividual">Por pessoa</h3>
+    <table id="tabelaValores">
+      <thead><tr><th>Pessoa</th><th>Área</th><th id="thCusto">Custo Total</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="tab" id="tab-log">
+    <h2>Log de Alterações</h2>
+    <p style="font-size:12.5px;color:#777">Histórico real de commits do arquivo de dados no GitHub — mostra quem mudou o quê e quando. Isto é gerado automaticamente pelo GitHub, ninguém pode editar este histórico.</p>
+    <div id="logList">Carregando...</div>
+  </section>
+
+  <div class="footer-note">Fonte: repositório privado <b id="repoNameFooter"></b> · Edições feitas aqui geram commits reais no GitHub · Valores financeiros só podem ser corrigidos na planilha Base Mestra.</div>
+</main>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+// ======= CONFIG =======
+const GH_OWNER = 'rafaelribeiropsi';
+const GH_REPO = 'monumentabaserh';
+const API = 'https://api.github.com';
+const PATH_DATA = 'portal_data.json';
+const PATH_PHOTOS = 'photo_b64.json';
+const PATH_RESUMO = 'resumo_pendencias.json';
+const NIVEL_ORDER = ['Presidência','VP','Diretor Executivo','Diretor Técnico','Coordenador',
+               'Coordenador (Líder Técnico)','Sênior','Pleno','Júnior','Suporte/Administrativo','Não identificado'];
+const STATUS_OPTIONS = ['Pendente','Validado','Rejeitado'];
+
+let TOKEN = null;
+let DATA = null, PHOTOS = {}, RESUMO = null;
+let SHA_DATA = null; // sha atual do portal_data.json, necessário para gravar
+
+// ======= GITHUB API HELPERS =======
+function ghHeaders(){
+  return {'Authorization': 'token ' + TOKEN, 'Accept': 'application/vnd.github+json'};
+}
+function b64ToText(b64){
+  return decodeURIComponent(escape(atob(b64.replace(/\n/g,''))));
+}
+function textToB64(text){
+  return btoa(unescape(encodeURIComponent(text)));
+}
+async function ghGetFile(path){
+  const metaRes = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {headers: ghHeaders()});
+  if(!metaRes.ok){
+    const e = new Error('Erro ao ler ' + path + ' (HTTP ' + metaRes.status + ')');
+    e.status = metaRes.status;
+    throw e;
+  }
+  const meta = await metaRes.json();
+  let b64 = meta.content;
+  if(!b64){
+    const blobRes = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/git/blobs/${meta.sha}`, {headers: ghHeaders()});
+    if(!blobRes.ok) throw new Error('Erro ao ler blob de ' + path);
+    const blob = await blobRes.json();
+    b64 = blob.content;
+  }
+  return {text: b64ToText(b64), sha: meta.sha};
+}
+async function ghPutFile(path, newText, sha, message){
+  const res = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+    method: 'PUT',
+    headers: {...ghHeaders(), 'Content-Type':'application/json'},
+    body: JSON.stringify({message, content: textToB64(newText), sha})
+  });
+  const body = await res.json().catch(()=>({}));
+  if(!res.ok){
+    const e = new Error(body.message || ('HTTP ' + res.status));
+    e.status = res.status;
+    throw e;
+  }
+  return body;
+}
+async function ghGetCommits(path, limit){
+  const res = await fetch(`${API}/repos/${GH_OWNER}/${GH_REPO}/commits?path=${encodeURIComponent(path)}&per_page=${limit||20}`, {headers: ghHeaders()});
+  if(!res.ok) throw new Error('Erro ao buscar histórico (HTTP ' + res.status + ')');
+  return res.json();
+}
+
+// ======= LOGIN / BOOT =======
+document.getElementById('repoNameFooter').textContent = GH_OWNER + '/' + GH_REPO;
+
+function showLogin(err){
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('loginErr').textContent = err || '';
+}
+document.getElementById('btnLogin').addEventListener('click', async ()=>{
+  const t = document.getElementById('tokenInput').value.trim();
+  if(!t){ document.getElementById('loginErr').textContent = 'Cole o token antes de entrar.'; return; }
+  TOKEN = t;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('loadingScreen').style.display = 'block';
+  try{
+    await boot();
+    localStorage.setItem('monumenta_gh_token', TOKEN);
+  }catch(e){
+    localStorage.removeItem('monumenta_gh_token');
+    showLogin(mensagemErro(e));
+  }
+});
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  localStorage.removeItem('monumenta_gh_token');
+  location.reload();
+});
+
+function mensagemErro(e){
+  if(e.status === 401) return 'Token inválido ou expirado. Gere um novo token e tente de novo.';
+  if(e.status === 404) return 'Não encontrei o repositório ou o arquivo de dados. Confirme se o token tem acesso a ' + GH_OWNER + '/' + GH_REPO + '.';
+  if(e.status === 403) return 'Seu token não tem permissão suficiente neste repositório (precisa de "Contents: Read and write").';
+  return 'Erro: ' + (e.message || e);
+}
+
+async function boot(){
+  const [dataFile, photosFile, resumoFile] = await Promise.all([
+    ghGetFile(PATH_DATA),
+    ghGetFile(PATH_PHOTOS),
+    ghGetFile(PATH_RESUMO),
+  ]);
+  DATA = JSON.parse(dataFile.text);
+  SHA_DATA = dataFile.sha;
+  PHOTOS = JSON.parse(photosFile.text);
+  RESUMO = JSON.parse(resumoFile.text);
+
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('bannerAviso').textContent = DATA.aviso || '';
+  document.getElementById('lastSync').textContent = 'Dados de: ' + DATA.gerado_em;
+
+  renderGeral();
+  renderOrganograma();
+  renderPessoasFiltros();
+  renderValores();
+  renderLog();
+}
+
+// tenta token salvo
+(function init(){
+  const saved = localStorage.getItem('monumenta_gh_token');
+  if(saved){
+    TOKEN = saved;
+    document.getElementById('loadingScreen').style.display = 'block';
+    boot().catch(e=>{
+      localStorage.removeItem('monumenta_gh_token');
+      showLogin(mensagemErro(e));
+    });
+  } else {
+    showLogin();
+  }
+})();
+
+// ======= UI HELPERS =======
+function initials(name){
+  const parts = (name||'').split(' ').filter(w=>w.length>1);
+  return ((parts[0]||'')[0]||'') + ((parts[parts.length-1]||'')[0]||'');
+}
+function avatarHTML(p, size){
+  const b64 = PHOTOS[p.id];
+  if(b64){
+    return `<img class="avatar" style="width:${size}px;height:${size}px" src="${b64}">`;
+  }
+  return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${size*0.3}px">${initials(p.nome)}</div>`;
+}
+function miniAvatarHTML(p){
+  const b64 = PHOTOS[p.id];
+  if(b64) return `<img class="mini-avatar" src="${b64}">`;
+  return `<div class="mini-avatar">${initials(p.nome)}</div>`;
+}
+function badgeClass(niv){
+  const key = 'badge-' + (niv||'').replace(/[^a-zA-Zà-úÀ-Ú]/g,'-');
+  return key;
+}
+function fmtMoney(v){
+  if(v===null || v===undefined) return '—';
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// ---------- NAV ----------
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'log') renderLog();
+  });
+});
+
+// ---------- VISÃO GERAL ----------
+function renderGeral(){
+  const p = RESUMO.painel;
+  const cards = [
+    {n:p.Total_pessoas_unicas, l:'Pessoas únicas'},
+    {n:p.Total_areas, l:'Áreas'},
+    {n:p.Total_equipes, l:'Equipes (setor x subsetor)'},
+    {n:p.Total_clientes, l:'Clientes'},
+    {n:p.Total_gestores, l:'Gestores/coordenadores identificados'},
+    {n:p.Pessoas_sem_gestor, l:'Pessoas sem gestor', cls:'warn'},
+    {n:p.Pessoas_sem_fotografia, l:'Pessoas sem fotografia', cls:'warn'},
+    {n:p.Pendencias_bloqueadoras, l:'Pendências bloqueadoras', cls:'alert'},
+    {n:p.Pendencias_criticas, l:'Pendências críticas', cls:'alert'},
+    {n:p.Percentual_completude_pessoas_pct+'%', l:'Completude da base'},
+  ];
+  document.getElementById('cardsGeral').innerHTML = cards.map(c=>
+    `<div class="card ${c.cls||''}"><div class="num">${c.n}</div><div class="label">${c.l}</div></div>`
+  ).join('');
+
+  document.getElementById('pendList').innerHTML = RESUMO.top_pendencias.map(c=>
+    `<div class="pend-item"><span class="sev sev-${c.Severidade}">${c.Severidade}</span><b>${c.Campo}</b> ${c.Nome? '— '+c.Nome : ''}<br><span style="color:#666">${c.Impacto}</span></div>`
+  ).join('');
+}
+
+// ---------- ORGANOGRAMA POR ÁREA ----------
+function renderOrganograma(){
+  const sel = document.getElementById('areaSelect');
+  const areas = [...DATA.areas].sort((a,b)=>b.pessoas-a.pessoas);
+  sel.innerHTML = areas.map(a=>`<option value="${a.area}">${a.area} (${a.pessoas})</option>`).join('');
+  sel.onchange = ()=>drawArea(sel.value);
+  drawArea(areas[0].area);
+}
+function drawArea(areaNome){
+  const pessoas = DATA.pessoas.filter(p=>p.area===areaNome);
+  const byNivel = {};
+  pessoas.forEach(p=>{
+    const niv = p.senioridade || 'Não identificado';
+    (byNivel[niv] = byNivel[niv]||[]).push(p);
+  });
+  let html = '';
+  NIVEL_ORDER.forEach(niv=>{
+    if(!byNivel[niv]) return;
+    const cards = byNivel[niv].sort((a,b)=>a.nome.localeCompare(b.nome)).map(p=>`
+      <div class="person-card" title="${p.cargo}">
+        ${avatarHTML(p,64)}
+        <div class="p-name">${p.nome}</div>
+        <div class="p-role">${niv}</div>
+      </div>`).join('');
+    html += `<div class="level-row"><div class="level-label">${niv} (${byNivel[niv].length})</div><div class="level-cards">${cards}</div></div>`;
+  });
+  document.getElementById('orgCanvas').innerHTML = html || '<p style="color:#fff">Nenhuma pessoa nesta área.</p>';
+}
+
+// ---------- PESSOAS ----------
+function renderPessoasFiltros(){
+  const areas = [...new Set(DATA.pessoas.map(p=>p.area))].sort();
+  const niveis = NIVEL_ORDER.filter(n=>DATA.pessoas.some(p=>p.senioridade===n));
+  const filtroArea = document.getElementById('filtroArea');
+  filtroArea.innerHTML = '<option value="">Todas as áreas</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+  const filtroSen = document.getElementById('filtroSenioridade');
+  filtroSen.innerHTML = '<option value="">Toda senioridade</option>' + niveis.map(n=>`<option value="${n}">${n}</option>`).join('');
+  document.getElementById('searchPessoas').oninput = renderTabelaPessoas;
+  filtroArea.onchange = renderTabelaPessoas;
+  filtroSen.onchange = renderTabelaPessoas;
+  renderTabelaPessoas();
+}
+function renderTabelaPessoas(){
+  const q = document.getElementById('searchPessoas').value.toLowerCase();
+  const fa = document.getElementById('filtroArea').value;
+  const fs = document.getElementById('filtroSenioridade').value;
+  const rows = DATA.pessoas.filter(p=>{
+    if(fa && p.area!==fa) return false;
+    if(fs && p.senioridade!==fs) return false;
+    if(q && !(p.nome.toLowerCase().includes(q) || (p.cargo||'').toLowerCase().includes(q) || p.area.toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b)=>a.nome.localeCompare(b.nome));
+  document.querySelector('#tabelaPessoas tbody').innerHTML = rows.map(p=>`
+    <tr class="row-clickable" data-id="${p.id}">
+      <td><div class="row-person">${miniAvatarHTML(p)}<span>${p.nome}</span></div></td>
+      <td>${p.area}</td>
+      <td>${p.cargo}</td>
+      <td><span class="badge ${badgeClass(p.senioridade)}">${p.senioridade}</span></td>
+      <td>${p.gestor_direto_nome || '<span style="color:#c0392b">não identificado</span>'}</td>
+      <td><span class="badge badge-status-${p.status_validacao||'Pendente'}">${p.status_validacao||'Pendente'}</span> <span class="edit-icon">✎</span></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#999">Nenhum resultado</td></tr>';
+  document.querySelectorAll('#tabelaPessoas tbody tr').forEach(tr=>{
+    tr.addEventListener('click', ()=>openEditModal(tr.dataset.id));
+  });
+}
+
+// ---------- MODAL DE EDIÇÃO ----------
+function openEditModal(pid){
+  const p = DATA.pessoas.find(x=>x.id===pid);
+  if(!p) return;
+  const areas = [...new Set(DATA.pessoas.map(x=>x.area))].sort();
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3>${p.nome}</h3>
+      <div style="font-size:12px;color:#888">${p.cargo} · ${p.id}</div>
+      <label>Área</label>
+      <select id="mArea">${areas.map(a=>`<option value="${a}" ${a===p.area?'selected':''}>${a}</option>`).join('')}</select>
+      <label>Gestor direto (nome)</label>
+      <input type="text" id="mGestor" value="${p.gestor_direto_nome||''}" placeholder="não identificado">
+      <label>Status de validação</label>
+      <select id="mStatus">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===(p.status_validacao||'Pendente')?'selected':''}>${s}</option>`).join('')}</select>
+      <label>Nota (opcional — explique a correção)</label>
+      <textarea id="mNota">${p.nota_validacao||''}</textarea>
+      <div style="font-size:11.5px;color:#999;margin-top:10px">Valores financeiros (salário/custo) não são editáveis aqui — corrija na planilha Base Mestra.</div>
+      <div class="msg" id="mMsg"></div>
+      <div class="actions">
+        <button class="cancel" id="mCancel">Cancelar</button>
+        <button class="save" id="mSave">Salvar no GitHub</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('mCancel').onclick = ()=>{ root.innerHTML=''; };
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') root.innerHTML=''; });
+  document.getElementById('mSave').onclick = ()=>saveEdit(pid);
+}
+
+async function saveEdit(pid){
+  const btn = document.getElementById('mSave');
+  const msg = document.getElementById('mMsg');
+  const novaArea = document.getElementById('mArea').value;
+  const novoGestor = document.getElementById('mGestor').value.trim();
+  const novoStatus = document.getElementById('mStatus').value;
+  const novaNota = document.getElementById('mNota').value.trim();
+
+  const p = DATA.pessoas.find(x=>x.id===pid);
+  const antes = {area:p.area, gestor_direto_nome:p.gestor_direto_nome, status_validacao:p.status_validacao, nota_validacao:p.nota_validacao};
+  p.area = novaArea;
+  p.gestor_direto_nome = novoGestor || null;
+  p.status_validacao = novoStatus;
+  p.nota_validacao = novaNota;
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  msg.textContent = '';
+  msg.className = 'msg';
+  try{
+    const novoTexto = JSON.stringify(DATA, null, 2);
+    const commitMsg = `Portal: atualização de ${p.nome} (${pid}) — área/gestor/validação`;
+    const result = await ghPutFile(PATH_DATA, novoTexto, SHA_DATA, commitMsg);
+    SHA_DATA = result.content.sha;
+    msg.textContent = 'Salvo! Commit registrado no GitHub.';
+    msg.className = 'msg ok';
+    renderTabelaPessoas();
+    renderOrganograma();
+    renderLog();
+    btn.textContent = 'Fechar';
+    btn.disabled = false;
+    btn.onclick = ()=>{ document.getElementById('modalRoot').innerHTML=''; };
+  }catch(e){
+    // desfaz a mudança local se falhar
+    Object.assign(p, antes);
+    if(e.status === 409){
+      msg.textContent = 'Alguém salvou outra alteração antes de você. Recarregue a página e tente de novo.';
+    } else {
+      msg.textContent = mensagemErro(e);
+    }
+    msg.className = 'msg err';
+    btn.disabled = false;
+    btn.textContent = 'Salvar no GitHub';
+  }
+}
+
+// ---------- VALORES ----------
+let modoValores = 'gestao';
+function renderValores(){
+  document.querySelectorAll('#modoToggle button').forEach(b=>{
+    b.onclick = ()=>{
+      modoValores = b.dataset.modo;
+      document.querySelectorAll('#modoToggle button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      drawValores();
+    };
+  });
+  drawValores();
+}
+function drawValores(){
+  const isRH = modoValores === 'rh';
+  document.getElementById('tituloEquipes').innerHTML = isRH ? 'Por equipe <span class="confidential">(custo total — confidencial)</span>' : 'Por equipe (headcount)';
+  document.getElementById('thCusto').textContent = isRH ? 'Custo Total' : 'Vínculos';
+  document.getElementById('tituloIndividual').innerHTML = isRH ? 'Por pessoa <span class="confidential">(confidencial)</span>' : 'Por pessoa';
+
+  const areas = [...DATA.areas].sort((a,b)=> isRH ? b.custo_total-a.custo_total : b.pessoas-a.pessoas);
+  const maxVal = isRH ? Math.max(...areas.map(a=>a.custo_total)) : Math.max(...areas.map(a=>a.pessoas));
+  document.getElementById('valoresEquipe').innerHTML = areas.map(a=>{
+    const val = isRH ? a.custo_total : a.pessoas;
+    const pct = maxVal ? (100*val/maxVal) : 0;
+    const label = isRH ? fmtMoney(val) : val + ' pessoas';
+    return `<div class="bar-row"><div class="bar-label">${a.area}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-value">${label}</div></div>`;
+  }).join('');
+
+  const pessoas = [...DATA.pessoas].sort((a,b)=> isRH ? (b.custo_total||0)-(a.custo_total||0) : a.nome.localeCompare(b.nome));
+  document.querySelector('#tabelaValores tbody').innerHTML = pessoas.map(p=>`
+    <tr>
+      <td><div class="row-person">${miniAvatarHTML(p)}<span>${p.nome}</span></div></td>
+      <td>${p.area}</td>
+      <td class="money">${isRH ? fmtMoney(p.custo_total) : p.quantidade_vinculos}</td>
+    </tr>`).join('');
+}
+
+// ---------- LOG DE ALTERAÇÕES ----------
+async function renderLog(){
+  const el = document.getElementById('logList');
+  el.textContent = 'Carregando...';
+  try{
+    const commits = await ghGetCommits(PATH_DATA, 30);
+    if(!commits.length){ el.innerHTML = '<p style="color:#999">Nenhuma alteração registrada ainda.</p>'; return; }
+    el.innerHTML = commits.map(c=>{
+      const author = c.commit.author.name || 'desconhecido';
+      const date = new Date(c.commit.author.date).toLocaleString('pt-BR');
+      const msgFirstLine = c.commit.message.split('\n')[0];
+      return `<div class="log-item"><span class="who">${author}</span> — ${msgFirstLine}<br><span class="when">${date}</span> · <a href="${c.html_url}" target="_blank">ver no GitHub</a></div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<p style="color:#c0392b">Erro ao carregar histórico: ' + (e.message||e) + '</p>';
+  }
+}
+</script>
+</body>
+</html>
