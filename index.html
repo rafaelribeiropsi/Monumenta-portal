@@ -4,54 +4,72 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portal Monumenta — Estrutura, Pessoas e Custos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --dark:#111111; --lime:#c8f135; --white:#ffffff; --grey:#8a8a8a; --grey-light:#f2f2f2;
-  --red:#e74c3c; --orange:#e67e22; --green:#27ae60; --card:#1b1b1b;
-  --canvas-bg:#0a0a0a; --glow:rgba(200,241,53,.35);
-  --ease:cubic-bezier(.4,0,.2,1);
+  --off-black:#111111; --off-white:#F5F5F7;
+  --bg:var(--off-black); --surface:#1C1C1E; --surface-2:#232326; --surface-3:#323234;
+  --accent:#C8F135; --accent-dim:rgba(200,241,53,0.16); --border-accent:rgba(200,241,53,.5);
+  --text:var(--off-white); --text-secondary:rgba(245,245,247,.58); --text-tertiary:rgba(245,245,247,.36);
+  --border:rgba(245,245,247,.09);
+  --danger:#FF6B6B; --warn:#FFBE3C; --green:#5FD068;
+  --dark:var(--off-black); --lime:var(--accent); --white:var(--off-white); --grey:var(--text-secondary); --grey-light:var(--surface-2);
+  --red:var(--danger); --orange:var(--warn);
+  --card:var(--surface); --canvas-bg:#0a0a0a; --glow:rgba(200,241,53,.35);
+  --font-head:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --radius-sm:12px; --radius:20px; --radius-lg:26px;
+  --ease:cubic-bezier(.25,.8,.25,1);
 }
-*{box-sizing:border-box;}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f5f5f5;color:#222;}
-header{background:var(--dark);color:var(--white);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.15);}
-header .brand{font-weight:800;color:var(--lime);font-size:18px;letter-spacing:0.5px;}
-header .sub{font-size:11px;color:#aaa;margin-top:2px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+header{background:var(--surface);color:var(--text);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.35);border-bottom:1px solid var(--border);}
+header .brand{font-weight:800;color:var(--accent);font-size:18px;letter-spacing:0.5px;font-family:var(--font-head);}
+header .sub{font-size:11px;color:var(--text-tertiary);margin-top:2px;}
 header .right{display:flex;align-items:center;gap:14px;}
-header button.link{background:none;border:1px solid #444;color:#ccc;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s var(--ease);}
-header button.link:hover{color:#fff;border-color:#888;transform:translateY(-1px);}
-.banner{background:var(--orange);color:#1a1a1a;text-align:center;padding:8px 12px;font-size:13px;font-weight:bold;}
-nav{display:flex;gap:4px;background:#1b1b1b;padding:0 20px;overflow-x:auto;}
-nav button{background:none;border:none;color:#ccc;padding:14px 18px;font-size:13.5px;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;white-space:nowrap;position:relative;transition:color .2s var(--ease);}
-nav button.active{color:var(--lime);font-weight:bold;}
-nav button::after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:3px;background:var(--lime);transform:scaleX(0);transition:transform .25s var(--ease);}
+header .right .sub{color:var(--text-secondary);}
+header button.link{background:none;border:1px solid var(--border);color:var(--text-secondary);padding:6px 12px;border-radius:980px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s var(--ease);}
+header button.link:hover{color:var(--text);border-color:var(--border-accent);transform:translateY(-1px);}
+.banner{background:var(--warn);color:var(--off-black);text-align:center;padding:8px 12px;font-size:13px;font-weight:bold;}
+.banner:empty{display:none;}
+nav{display:flex;gap:4px;background:var(--surface);padding:0 20px;overflow-x:auto;border-bottom:1px solid var(--border);}
+nav button{background:none;border:none;color:var(--text-secondary);padding:14px 18px;font-size:13.5px;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;white-space:nowrap;position:relative;transition:color .2s var(--ease);}
+nav button.active{color:var(--accent);font-weight:bold;}
+nav button::after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:3px;background:var(--accent);transform:scaleX(0);transition:transform .25s var(--ease);}
 nav button.active::after{transform:scaleX(1);}
-nav button:hover{color:#fff;}
+nav button:hover{color:var(--text);}
 main{padding:24px;max-width:1400px;margin:0 auto;}
 .tab{display:none;} .tab.active{display:block;animation:fadeIn .3s var(--ease);}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
-.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid var(--lime);transition:transform .18s var(--ease),box-shadow .18s var(--ease);}
-.card:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
-.card .num{font-size:28px;font-weight:800;color:var(--dark);}
-.card .label{font-size:12px;color:#666;margin-top:4px;}
-.card.alert{border-left-color:var(--red);}
-.card.warn{border-left-color:var(--orange);}
-h2{color:var(--dark);border-bottom:2px solid var(--lime);padding-bottom:6px;display:inline-block;}
-.pend-list{background:#fff;border-radius:10px;padding:0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-.pend-item{padding:12px 16px;border-bottom:1px solid #eee;font-size:13px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.22);border-left:4px solid var(--accent);transition:transform .18s var(--ease),box-shadow .18s var(--ease);}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.32);}
+.card .num{font-size:28px;font-weight:800;color:var(--text);font-family:var(--font-head);}
+.card .label{font-size:12px;color:var(--text-secondary);margin-top:4px;}
+.card.alert{border-left-color:var(--danger);}
+.card.warn{border-left-color:var(--warn);}
+h2{color:var(--text);border-bottom:2px solid var(--accent);padding-bottom:6px;display:inline-block;font-family:var(--font-head);letter-spacing:-0.01em;}
+h3{color:var(--text);font-family:var(--font-head);}
+.pend-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;}
+.pend-item{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
 .pend-item:last-child{border-bottom:none;}
-.pend-item.pend-salario{border-left:4px solid var(--orange);}
-.sev{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;color:#fff;margin-right:8px;}
-.sev-Bloqueadora{background:var(--red);} .sev-Crítica{background:#c0392b;} .sev-Alta{background:var(--orange);}
+.pend-item.pend-salario{border-left:4px solid var(--warn);}
+.sev{display:inline-block;padding:2px 8px;border-radius:980px;font-size:11px;font-weight:bold;color:var(--off-black);margin-right:8px;}
+.sev-Bloqueadora{background:var(--danger);} .sev-Crítica{background:#e05a5a;} .sev-Alta{background:var(--warn);}
 .controls{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
-select,input[type=text],input[type=password],input[type=number],textarea{padding:8px 12px;border-radius:6px;border:1px solid #ccc;font-size:14px;font-family:inherit;transition:border-color .15s var(--ease),box-shadow .15s var(--ease);}
-select:focus,input:focus,textarea:focus{outline:none;border-color:var(--lime);box-shadow:0 0 0 3px rgba(200,241,53,.25);}
+select,input[type=text],input[type=password],input[type=number],input[type=email],textarea{
+  background:var(--surface-2);border:1px solid transparent;color:var(--text);border-radius:var(--radius-sm);
+  padding:10px 13px;font-size:14px;font-family:var(--font-body);transition:border-color .15s var(--ease),background .15s var(--ease),box-shadow .15s var(--ease);
+}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent);background:var(--surface-3);box-shadow:0 0 0 3px var(--accent-dim);}
+input::placeholder,textarea::placeholder{color:var(--text-tertiary);}
 input[type=text]{flex:1;min-width:220px;}
-.toggle{display:flex;background:#ddd;border-radius:20px;overflow:hidden;}
-.toggle button{border:none;background:none;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:bold;color:#555;font-family:inherit;transition:all .15s var(--ease);}
-.toggle button.on{background:var(--dark);color:var(--lime);}
+.toggle{display:flex;background:var(--surface-2);border-radius:980px;overflow:hidden;border:1px solid var(--border);}
+.toggle button{border:none;background:none;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:bold;color:var(--text-secondary);font-family:inherit;transition:all .15s var(--ease);}
+.toggle button.on{background:var(--accent);color:var(--off-black);}
 .org-canvas,.lideranca-canvas{
-  background:var(--canvas-bg);border-radius:14px;padding:36px 16px 46px;min-height:420px;
+  background:var(--canvas-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px 16px 46px;min-height:420px;
   position:relative;overflow:auto;
   background-image:
     radial-gradient(ellipse 40% 35% at 0% 0%, rgba(200,241,53,.06) 0%, transparent 70%),
@@ -59,84 +77,107 @@ input[type=text]{flex:1;min-width:220px;}
 }
 .tree-svg{position:absolute;left:0;top:0;pointer-events:none;z-index:1;}
 .level-row{position:relative;z-index:2;margin-bottom:34px;}
-.level-label{color:var(--lime);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;text-align:left;margin:0 0 12px 6px;font-weight:700;border-left:2px solid #2a2a2a;padding-left:8px;}
-.level-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;position:relative;z-index:2;min-height:110px;border-radius:10px;transition:background .15s var(--ease);}
-.level-cards.drop-hover{background:rgba(200,241,53,.08);outline:2px dashed var(--lime);}
+.level-label{color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;text-align:left;margin:0 0 12px 6px;font-weight:700;border-left:2px solid var(--surface-3);padding-left:8px;}
+.level-cards{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;position:relative;z-index:2;min-height:110px;border-radius:var(--radius-sm);transition:background .15s var(--ease);}
+.level-cards.drop-hover{background:var(--accent-dim);outline:2px dashed var(--accent);}
 .person-card{width:112px;text-align:center;position:relative;z-index:2;cursor:pointer;transition:transform .18s var(--ease);}
 .person-card:hover{transform:translateY(-4px);}
 .person-card.draggable-card{cursor:grab;}
 .person-card.draggable-card.dragging{cursor:grabbing;opacity:.35;}
 .drag-ghost{opacity:.9;transform:scale(1.05);box-shadow:0 12px 28px rgba(0,0,0,.4);}
-.avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;background:#222;margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--lime);font-weight:bold;font-size:20px;
-  box-shadow:0 0 0 2px #111,0 0 0 3px var(--lime),0 0 14px 2px var(--glow);filter:grayscale(45%) contrast(1.05);}
-.p-name{color:#fff;font-size:11px;font-weight:700;margin-top:8px;line-height:1.25;}
-.p-role{color:var(--lime);font-size:9.5px;margin-top:2px;line-height:1.2;opacity:.9;}
-.p-pendente-badge{display:inline-block;margin-top:4px;background:rgba(230,126,34,.18);color:#e67e22;border:1px solid #e67e22;border-radius:8px;font-size:9px;padding:1px 6px;}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-th{background:var(--dark);color:var(--lime);text-align:left;padding:10px 12px;font-size:12px;}
-td{padding:9px 12px;font-size:13px;border-bottom:1px solid #eee;}
-tr:nth-child(even) td{background:#fafafa;}
+.avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--surface-2);margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:bold;font-size:20px;
+  box-shadow:0 0 0 2px var(--off-black),0 0 0 3px var(--accent),0 0 14px 2px var(--glow);filter:grayscale(45%) contrast(1.05);}
+.p-name{color:var(--text);font-size:11px;font-weight:700;margin-top:8px;line-height:1.25;}
+.p-role{color:var(--accent);font-size:9.5px;margin-top:2px;line-height:1.2;opacity:.9;}
+.p-pendente-badge{display:inline-block;margin-top:4px;background:rgba(255,190,60,.16);color:var(--warn);border:1px solid var(--warn);border-radius:980px;font-size:9px;padding:1px 6px;}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+th{background:var(--surface-2);color:var(--accent);text-align:left;padding:10px 12px;font-size:12px;}
+td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:nth-child(even) td{background:rgba(255,255,255,.015);}
 tr.row-clickable{cursor:pointer;}
-tr.row-clickable:hover td{background:#eef7d8;}
+tr.row-clickable:hover td{background:var(--accent-dim);}
 .row-person{display:flex;align-items:center;gap:8px;}
-.mini-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#666;filter:grayscale(60%);}
-.badge{padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:bold;color:#fff;}
-.badge-Diretor-Técnico{background:#2c3e50;} .badge-Coordenador{background:#16a085;}
-.badge-Sênior{background:#2980b9;} .badge-Pleno{background:#27ae60;} .badge-Júnior{background:#f39c12;}
-.badge-default{background:#7f8c8d;}
-.badge-status-Pendente{background:#e67e22;} .badge-status-Validado{background:#27ae60;} .badge-status-Rejeitado{background:#c0392b;}
-.nota-badge{padding:2px 10px;border-radius:10px;font-weight:800;font-size:12px;color:#fff;display:inline-block;}
-.nota-boa{background:var(--green);} .nota-media{background:var(--orange);} .nota-baixa{background:var(--red);}
-.footer-note{color:#999;font-size:11px;text-align:center;margin:30px 0 10px;}
-.money{font-family:'Courier New',monospace;}
-.confidential{color:var(--red);font-weight:bold;}
+.mini-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:var(--text-secondary);filter:grayscale(60%);}
+.badge{padding:2px 8px;border-radius:980px;font-size:10.5px;font-weight:bold;color:var(--off-black);}
+.badge-Diretor-Técnico{background:#8fa3c7;} .badge-Coordenador{background:#5fd0b8;}
+.badge-Sênior{background:#6fb3e8;} .badge-Pleno{background:var(--accent);} .badge-Júnior{background:var(--warn);}
+.badge-default{background:var(--text-tertiary);color:var(--off-black);}
+.badge-status-Pendente{background:var(--warn);} .badge-status-Validado{background:var(--accent);} .badge-status-Rejeitado{background:var(--danger);color:var(--off-black);}
+.badge-status-Ativo{background:var(--accent);} .badge-status-Inativo{background:var(--text-tertiary);}
+.nota-badge{padding:2px 10px;border-radius:980px;font-weight:800;font-size:12px;color:var(--off-black);display:inline-block;}
+.nota-boa{background:var(--accent);} .nota-media{background:var(--warn);} .nota-baixa{background:var(--danger);}
+.footer-note{color:var(--text-tertiary);font-size:11px;text-align:center;margin:30px 0 10px;}
+.money{font-family:'JetBrains Mono','Courier New',monospace;}
+.confidential{color:var(--danger);font-weight:bold;}
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.bar-label{width:180px;font-size:12px;text-align:right;flex-shrink:0;}
-.bar-track{flex:1;background:#eee;border-radius:4px;height:20px;position:relative;overflow:hidden;}
-.bar-fill{background:var(--lime);height:100%;border-radius:4px;transition:width .4s var(--ease);}
-.bar-value{font-size:11px;font-weight:bold;margin-left:8px;white-space:nowrap;}
+.bar-label{width:180px;font-size:12px;text-align:right;flex-shrink:0;color:var(--text-secondary);}
+.bar-track{flex:1;background:var(--surface-2);border-radius:4px;height:20px;position:relative;overflow:hidden;}
+.bar-fill{background:var(--accent);height:100%;border-radius:4px;transition:width .4s var(--ease);}
+.bar-value{font-size:11px;font-weight:bold;margin-left:8px;white-space:nowrap;color:var(--text-secondary);}
+
+/* botões — Design System Monumenta */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--radius-sm);border:1px solid transparent;padding:10px 18px;font-size:14px;font-weight:600;letter-spacing:-0.01em;transition:transform .12s var(--ease),background .15s var(--ease),opacity .15s var(--ease);white-space:nowrap;cursor:pointer;font-family:inherit;}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:var(--accent);color:var(--off-black);}
+.btn-primary:hover{filter:brightness(1.07);}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.btn-secondary{background:var(--surface-2);color:var(--text);border-color:var(--border);}
+.btn-secondary:hover{background:var(--surface-3);}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:none;}
+.btn-ghost:hover{color:var(--text);}
+.btn-sm{padding:7px 14px;font-size:12.5px;border-radius:980px;}
+.btn-danger-outline{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);color:var(--danger);}
+.btn-danger-outline:hover{background:rgba(255,107,107,.16);}
 
 /* login screen */
-#loginScreen{max-width:460px;margin:80px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
-#loginScreen h1{color:var(--dark);font-size:20px;margin-top:0;}
-#loginScreen p{font-size:13px;color:#555;line-height:1.5;}
+#loginScreen{max-width:460px;margin:80px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;box-shadow:0 12px 40px rgba(0,0,0,.4);}
+#loginScreen h1{color:var(--text);font-size:20px;margin-top:0;font-family:var(--font-head);}
+#loginScreen p{font-size:13px;color:var(--text-secondary);line-height:1.5;}
 #loginScreen input{width:100%;margin:12px 0;}
-#loginScreen button.primary{background:var(--dark);color:var(--lime);border:none;padding:12px;border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;width:100%;font-family:inherit;transition:transform .15s var(--ease),opacity .15s var(--ease);}
-#loginScreen button.primary:hover{opacity:.9;transform:translateY(-1px);}
-#loginScreen .err{color:var(--red);font-size:13px;margin-top:8px;}
-#loginScreen details{margin-top:16px;font-size:12px;color:#555;}
+#loginScreen button.primary{background:var(--accent);color:var(--off-black);border:none;padding:13px;border-radius:var(--radius-sm);font-weight:700;font-size:14px;cursor:pointer;width:100%;font-family:inherit;transition:transform .15s var(--ease),filter .15s var(--ease);}
+#loginScreen button.primary:hover{filter:brightness(1.07);transform:translateY(-1px);}
+#loginScreen .err{color:var(--danger);font-size:13px;margin-top:8px;}
+#loginScreen details{margin-top:16px;font-size:12px;color:var(--text-secondary);}
 #loginScreen details ol{padding-left:18px;line-height:1.6;}
-#loadingScreen{max-width:460px;margin:120px auto;text-align:center;color:#777;font-size:14px;}
+#loadingScreen{max-width:460px;margin:120px auto;text-align:center;color:var(--text-secondary);font-size:14px;}
 
 /* modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100;animation:overlayIn .18s var(--ease);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:100;animation:overlayIn .18s var(--ease);}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
-.modal{background:#fff;border-radius:12px;padding:24px;width:420px;max-width:92vw;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:modalIn .22s var(--ease);max-height:88vh;overflow:auto;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:440px;max-width:92vw;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:modalIn .22s var(--ease);max-height:88vh;overflow:auto;}
 @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal h3{margin-top:0;color:var(--dark);}
-.modal label{display:block;font-size:12px;font-weight:bold;color:#555;margin:14px 0 4px;}
+.modal h3{margin-top:0;color:var(--text);font-family:var(--font-head);}
+.modal label{display:block;font-size:12.5px;font-weight:500;color:var(--text-secondary);margin:14px 0 6px;}
 .modal input,.modal select,.modal textarea{width:100%;}
 .modal textarea{min-height:60px;font-family:inherit;resize:vertical;}
 .modal .actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
-.modal button{padding:10px 18px;border-radius:6px;border:none;font-weight:bold;cursor:pointer;font-family:inherit;font-size:13px;transition:transform .15s var(--ease),opacity .15s var(--ease);}
+.modal button{padding:10px 18px;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;transition:transform .15s var(--ease),opacity .15s var(--ease);}
 .modal button:hover{opacity:.9;}
 .modal button:active{transform:scale(.96);}
-.modal button.save{background:var(--dark);color:var(--lime);}
-.modal button.cancel{background:#eee;color:#555;}
+.modal button.save{background:var(--accent);color:var(--off-black);}
+.modal button.cancel{background:var(--surface-2);color:var(--text);}
+.modal button.danger{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.35);color:var(--danger);}
 .modal .msg{font-size:12px;margin-top:10px;}
-.modal .msg.ok{color:var(--green);} .modal .msg.err{color:var(--red);}
+.modal .msg.ok{color:var(--accent);} .modal .msg.err{color:var(--danger);}
+.modal .divider{border-top:1px solid var(--border);margin:18px 0;}
 .edit-icon{opacity:0.5;margin-left:6px;font-size:12px;}
 tr.row-clickable:hover .edit-icon{opacity:1;}
 
-.log-item{background:#fff;border-radius:10px;padding:12px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);font-size:13px;}
-.log-item .who{font-weight:bold;color:var(--dark);}
-.log-item .when{color:#888;font-size:11.5px;}
-.log-item a{color:#2980b9;text-decoration:none;font-size:11.5px;}
+.log-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;font-size:13px;color:var(--text);}
+.log-item .who{font-weight:bold;color:var(--accent);}
+.log-item .when{color:var(--text-tertiary);font-size:11.5px;}
+.log-item a{color:var(--accent);text-decoration:none;font-size:11.5px;}
 
 #toastRoot{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
-.toast{background:var(--dark);color:var(--lime);padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.25);animation:toastIn .25s var(--ease);max-width:320px;}
-.toast.err{color:#ff8a80;}
+.toast{background:rgba(28,28,30,.92);backdrop-filter:blur(20px) saturate(1.8);color:var(--text);border:1px solid var(--border);padding:12px 20px;border-radius:980px;font-size:13px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.5);animation:toastIn .25s var(--ease);max-width:320px;}
+.toast.err{color:var(--danger);}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* aba Diretores */
+.diretor-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;gap:16px;align-items:flex-start;}
+.diretor-card .avatar{margin:0;flex-shrink:0;}
+.diretor-areas{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.diretor-areas .badge-area{background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border);padding:2px 10px;border-radius:980px;font-size:11px;font-weight:500;}
 </style>
 </head>
 <body>
@@ -179,6 +220,7 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
   <button data-tab="pessoas">Pessoas</button>
   <button data-tab="financeiro">Controle Financeiro</button>
   <button data-tab="avaliacao">Avaliação</button>
+  <button data-tab="diretores">Diretores</button>
   <button data-tab="log">Log de Alterações</button>
 </nav>
 <main>
@@ -192,7 +234,7 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
 
   <section class="tab" id="tab-organograma">
     <h2>Organograma por Área</h2>
-    <p style="font-size:12.5px;color:#777">Arraste o card de uma pessoa para outra faixa de senioridade para promovê-la (ou realocar o nível). Você pode registrar um novo salário — ele fica como proposta pendente até você mesmo aplicar na planilha.</p>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Arraste o card de uma pessoa para outra faixa de senioridade para promovê-la (ou realocar o nível). Você pode registrar um novo salário — ele fica como proposta pendente até você mesmo aplicar na planilha.</p>
     <div class="controls">
       <select id="areaSelect"></select>
     </div>
@@ -201,17 +243,18 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
 
   <section class="tab" id="tab-lideranca">
     <h2>Organograma de Liderança</h2>
-    <p style="font-size:12.5px;color:#777">Presidência, VP/Diretoria Executiva, Diretores Técnicos e Coordenadores — vínculos calculados a partir do gestor direto de cada pessoa.</p>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Presidência, VP/Diretoria Executiva, Diretores Técnicos e Coordenadores — vínculos calculados a partir do gestor direto de cada pessoa.</p>
     <div class="org-canvas lideranca-canvas" id="lidCanvas"></div>
   </section>
 
   <section class="tab" id="tab-pessoas">
     <h2>Pessoas</h2>
-    <p style="font-size:12.5px;color:#777">Clique em uma pessoa para corrigir nome, cargo, time, área, gestor direto ou status de validação. Cada correção gera um registro no Log de Alterações.</p>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Clique em uma pessoa para corrigir nome, cargo, time, área, gestor direto ou status de validação. Cada correção gera um registro no Log de Alterações.</p>
     <div class="controls">
       <input type="text" id="searchPessoas" placeholder="Buscar por nome, cargo ou área...">
       <select id="filtroArea"><option value="">Todas as áreas</option></select>
       <select id="filtroSenioridade"><option value="">Toda senioridade</option></select>
+      <button class="btn btn-primary btn-sm" id="btnNovaPessoa" style="margin-left:auto">+ Nova pessoa</button>
     </div>
     <table id="tabelaPessoas">
       <thead><tr><th>Pessoa</th><th>Área</th><th>Cargo</th><th>Senioridade</th><th>Gestor Direto</th><th>Validação</th></tr></thead>
@@ -235,7 +278,7 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
     <div id="valoresEquipe"></div>
 
     <div id="distribSenioridadeWrap" style="display:none">
-      <h3>Distribuição de custo por senioridade <span style="font-size:11px;color:#999">(insight)</span></h3>
+      <h3>Distribuição de custo por senioridade <span style="font-size:11px;color:var(--text-tertiary)">(insight)</span></h3>
       <div id="distribSenioridade"></div>
     </div>
 
@@ -245,14 +288,14 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
       <tbody></tbody>
     </table>
 
-    <div class="pend-item" style="margin-top:20px;background:#fffbe6;border:1px dashed #e6c200;color:#7a6300;border-radius:8px">
+    <div class="pend-item" style="margin-top:20px;background:rgba(255,190,60,.10);border:1px dashed rgba(255,190,60,.4);color:var(--warn);border-radius:var(--radius-sm)">
       <b>Em breve:</b> monitoramento de gastos com Uber Corporativo e excedentes no fluxo de verbas de viagem por setor — aguardando integração com a fonte de dados correspondente.
     </div>
   </section>
 
   <section class="tab" id="tab-avaliacao">
     <h2>Avaliação de Diretores e Setores</h2>
-    <p style="font-size:12.5px;color:#777">Modelo inicial/rascunho de avaliação periódica — os critérios definitivos serão ajustados com você. Por enquanto: nota de 1 a 5 + comentário livre por diretor(a).</p>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Modelo inicial/rascunho de avaliação periódica — os critérios definitivos serão ajustados com você. Por enquanto: nota de 1 a 5 + comentário livre por diretor(a).</p>
     <div class="cards" id="cardsAvaliacao"></div>
     <h3>Histórico de avaliações</h3>
     <table id="tabelaAvaliacoes">
@@ -261,9 +304,15 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
     </table>
   </section>
 
+  <section class="tab" id="tab-diretores">
+    <h2>Diretores Técnicos e Áreas</h2>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Um card por diretor(a) técnico(a), com as áreas sob sua gestão, o headcount e a avaliação de desempenho mais recente.</p>
+    <div class="cards" id="cardsDiretores" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"></div>
+  </section>
+
   <section class="tab" id="tab-log">
     <h2>Log de Alterações</h2>
-    <p style="font-size:12.5px;color:#777">Histórico real de commits do arquivo de dados no GitHub — mostra quem mudou o quê e quando. Isto é gerado automaticamente pelo GitHub, ninguém pode editar este histórico.</p>
+    <p style="font-size:12.5px;color:var(--text-secondary)">Histórico real de commits do arquivo de dados no GitHub — mostra quem mudou o quê e quando. Isto é gerado automaticamente pelo GitHub, ninguém pode editar este histórico.</p>
     <div id="logList">Carregando...</div>
   </section>
 
@@ -394,6 +443,9 @@ async function boot(){
     if(p.nota_salario_proposto===undefined) p.nota_salario_proposto = '';
     if(p.data_salario_proposto===undefined) p.data_salario_proposto = null;
     if(p.nivel_anterior_proposto===undefined) p.nivel_anterior_proposto = null;
+    if(p.status_ativo===undefined) p.status_ativo = 'Ativo';
+    if(p.email_corporativo===undefined) p.email_corporativo = '';
+    if(p.cliente===undefined) p.cliente = '';
   });
 
   document.getElementById('loadingScreen').style.display = 'none';
@@ -407,6 +459,7 @@ async function boot(){
   renderPessoasFiltros();
   renderFinanceiro();
   renderAvaliacao();
+  renderDiretores();
   renderLog();
 }
 
@@ -495,18 +548,27 @@ window.addEventListener('resize', debounce(()=>{
 // ---------- VISÃO GERAL ----------
 function renderGeral(){
   const p = RESUMO.painel;
+  // Estas 7 métricas são recalculadas direto de DATA.pessoas/áreas a cada render, para nunca
+  // ficarem desatualizadas quando alguém adiciona/exclui/edita pessoas no próprio portal
+  // (resumo_pendencias.json só é atualizado manualmente — ver LEIA-ME).
+  const totalPessoas = DATA.pessoas.length;
+  const totalAreas = new Set(DATA.pessoas.map(x=>x.area)).size;
+  const totalEquipes = new Set(DATA.pessoas.map(x=>x.area+'|'+(x.equipe_original||''))).size;
+  const totalClientes = new Set(DATA.pessoas.map(x=>x.cliente).filter(Boolean)).size;
+  const totalGestores = DATA.pessoas.filter(x=>LIDERANCA_NIVEIS.includes(x.senioridade)).length;
+  const semGestor = DATA.pessoas.filter(x=>!x.gestor_direto_id && !x.gestor_direto_nome && !LIDERANCA_NIVEIS.includes(x.senioridade)).length;
+  const semFoto = DATA.pessoas.filter(x=>!PHOTOS[x.id]).length;
   const pendSalCount = DATA.pessoas.filter(x=>x.status_salario_proposto==='Pendente').length;
   const cards = [
-    {n:p.Total_pessoas_unicas, l:'Pessoas únicas'},
-    {n:p.Total_areas, l:'Áreas'},
-    {n:p.Total_equipes, l:'Equipes (setor x subsetor)'},
-    {n:p.Total_clientes, l:'Clientes'},
-    {n:p.Total_gestores, l:'Gestores/coordenadores identificados'},
-    {n:p.Pessoas_sem_gestor, l:'Pessoas sem gestor', cls:'warn'},
-    {n:p.Pessoas_sem_fotografia, l:'Pessoas sem fotografia', cls:'warn'},
+    {n:totalPessoas, l:'Pessoas únicas'},
+    {n:totalAreas, l:'Áreas'},
+    {n:totalEquipes, l:'Equipes (setor x subsetor)'},
+    {n:totalClientes, l:'Clientes'},
+    {n:totalGestores, l:'Gestores/coordenadores identificados'},
+    {n:semGestor, l:'Pessoas sem gestor', cls:'warn'},
+    {n:semFoto, l:'Pessoas sem fotografia', cls:'warn'},
     {n:p.Pendencias_bloqueadoras, l:'Pendências bloqueadoras', cls:'alert'},
     {n:p.Pendencias_criticas, l:'Pendências críticas', cls:'alert'},
-    {n:p.Percentual_completude_pessoas_pct+'%', l:'Completude da base'},
     {n:pendSalCount, l:'Promoções c/ salário pendente de aplicação', cls: pendSalCount>0?'warn':''},
   ];
   document.getElementById('cardsGeral').innerHTML = cards.map(c=>
@@ -514,7 +576,7 @@ function renderGeral(){
   ).join('');
 
   document.getElementById('pendList').innerHTML = RESUMO.top_pendencias.map(c=>
-    `<div class="pend-item"><span class="sev sev-${c.Severidade}">${c.Severidade}</span><b>${c.Campo}</b> ${c.Nome? '— '+c.Nome : ''}<br><span style="color:#666">${c.Impacto}</span></div>`
+    `<div class="pend-item"><span class="sev sev-${c.Severidade}">${c.Severidade}</span><b>${c.Campo}</b> ${c.Nome? '— '+c.Nome : ''}<br><span style="color:var(--text-secondary)">${c.Impacto}</span></div>`
   ).join('');
 }
 
@@ -732,7 +794,7 @@ function openPromocaoModal(p, nivelAtual, novoNivel){
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h3>Mover ${p.nome}</h3>
-      <div style="font-size:12px;color:#888">${p.id} · ${nivelAtual} → <b style="color:#111">${novoNivel}</b></div>
+      <div style="font-size:12px;color:var(--text-tertiary)">${p.id} · ${nivelAtual} → <b style="color:var(--accent)">${novoNivel}</b></div>
       <label>Novo salário (opcional — fica como proposta pendente, não altera a planilha automaticamente)</label>
       <input type="number" step="0.01" id="pmSalario" placeholder="ex: 3500.00">
       <label>Nota (opcional)</label>
@@ -808,6 +870,7 @@ function renderPessoasFiltros(){
   document.getElementById('searchPessoas').oninput = renderTabelaPessoas;
   filtroArea.onchange = renderTabelaPessoas;
   filtroSen.onchange = renderTabelaPessoas;
+  document.getElementById('btnNovaPessoa').onclick = openCreateModal;
   renderTabelaPessoas();
 }
 function renderTabelaPessoas(){
@@ -827,10 +890,10 @@ function renderTabelaPessoas(){
       <td>${p.area}</td>
       <td>${p.cargo}</td>
       <td><span class="badge ${badgeClass(p.senioridade)}">${p.senioridade}</span>${pend}</td>
-      <td>${p.gestor_direto_nome || '<span style="color:#c0392b">não identificado</span>'}</td>
+      <td>${p.gestor_direto_nome || '<span style="color:var(--danger)">não identificado</span>'}</td>
       <td><span class="badge badge-status-${p.status_validacao||'Pendente'}">${p.status_validacao||'Pendente'}</span> <span class="edit-icon">✎</span></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#999">Nenhum resultado</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-tertiary)">Nenhum resultado</td></tr>';
   document.querySelectorAll('#tabelaPessoas tbody tr').forEach(tr=>{
     tr.addEventListener('click', ()=>openEditModal(tr.dataset.id));
   });
@@ -841,12 +904,13 @@ function openEditModal(pid){
   const p = DATA.pessoas.find(x=>x.id===pid);
   if(!p) return;
   const areas = [...new Set(DATA.pessoas.map(x=>x.area))].sort();
+  const niveis = NIVEL_ORDER.filter(n=>n!=='Não identificado');
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h3>${p.nome}</h3>
-      <div style="font-size:12px;color:#888">${p.id}</div>
+      <div style="font-size:12px;color:var(--text-tertiary)">${p.id}</div>
       <label>Nome</label>
       <input type="text" id="mNome" value="${p.nome||''}">
       <label>Cargo / Função</label>
@@ -855,23 +919,37 @@ function openEditModal(pid){
       <input type="text" id="mEquipe" value="${p.equipe_original||''}">
       <label>Área</label>
       <select id="mArea">${areas.map(a=>`<option value="${a}" ${a===p.area?'selected':''}>${a}</option>`).join('')}</select>
+      <label>Cliente</label>
+      <input type="text" id="mCliente" value="${p.cliente||''}">
+      <label>Senioridade</label>
+      <select id="mSenioridade">${niveis.map(n=>`<option value="${n}" ${n===p.senioridade?'selected':''}>${n}</option>`).join('')}</select>
+      <div class="hint" style="font-size:11.5px;color:var(--text-tertiary);margin-top:-2px">Correção direta de nível. Para promover com proposta de novo salário e histórico, arraste o card no Organograma por Área.</div>
       <label>Gestor direto (nome)</label>
       <input type="text" id="mGestor" value="${p.gestor_direto_nome||''}" placeholder="não identificado">
+      <label>Status ativo/inativo</label>
+      <select id="mStatusAtivo"><option value="Ativo" ${p.status_ativo!=='Inativo'?'selected':''}>Ativo</option><option value="Inativo" ${p.status_ativo==='Inativo'?'selected':''}>Inativo</option></select>
+      <label>E-mail corporativo</label>
+      <input type="email" id="mEmail" value="${p.email_corporativo||''}" placeholder="nome@monumenta.com.br">
       <label>Status de validação</label>
       <select id="mStatus">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===(p.status_validacao||'Pendente')?'selected':''}>${s}</option>`).join('')}</select>
       <label>Nota (opcional — explique a correção)</label>
       <textarea id="mNota">${p.nota_validacao||''}</textarea>
-      <div style="font-size:11.5px;color:#999;margin-top:10px">Valores financeiros (salário/custo) não são editáveis aqui — corrija na planilha Base Mestra ou use o organograma para propor uma promoção.</div>
+      <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px">Valores financeiros (salário/custo) não são editáveis aqui — corrija na planilha Base Mestra ou use o organograma para propor uma promoção.</div>
       <div class="msg" id="mMsg"></div>
-      <div class="actions">
-        <button class="cancel" id="mCancel">Cancelar</button>
-        <button class="save" id="mSave">Salvar no GitHub</button>
+      <div class="divider"></div>
+      <div class="actions" style="justify-content:space-between">
+        <button class="danger" id="mDelete">Excluir pessoa</button>
+        <div style="display:flex;gap:10px">
+          <button class="cancel" id="mCancel">Cancelar</button>
+          <button class="save" id="mSave">Salvar no GitHub</button>
+        </div>
       </div>
     </div>
   </div>`;
   document.getElementById('mCancel').onclick = ()=>{ root.innerHTML=''; };
   document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') root.innerHTML=''; });
   document.getElementById('mSave').onclick = ()=>saveEdit(pid);
+  document.getElementById('mDelete').onclick = ()=>confirmDelete(pid);
 }
 
 async function saveEdit(pid){
@@ -881,18 +959,26 @@ async function saveEdit(pid){
   const novoCargo = document.getElementById('mCargo').value.trim();
   const novaEquipe = document.getElementById('mEquipe').value.trim();
   const novaArea = document.getElementById('mArea').value;
+  const novoCliente = document.getElementById('mCliente').value.trim();
+  const novaSenioridade = document.getElementById('mSenioridade').value;
   const novoGestor = document.getElementById('mGestor').value.trim();
+  const novoStatusAtivo = document.getElementById('mStatusAtivo').value;
+  const novoEmail = document.getElementById('mEmail').value.trim();
   const novoStatus = document.getElementById('mStatus').value;
   const novaNota = document.getElementById('mNota').value.trim();
 
   const p = DATA.pessoas.find(x=>x.id===pid);
-  const antes = {nome:p.nome, cargo:p.cargo, equipe_original:p.equipe_original, area:p.area, gestor_direto_nome:p.gestor_direto_nome, status_validacao:p.status_validacao, nota_validacao:p.nota_validacao};
+  const antes = {nome:p.nome, cargo:p.cargo, equipe_original:p.equipe_original, area:p.area, cliente:p.cliente, senioridade:p.senioridade, gestor_direto_nome:p.gestor_direto_nome, status_ativo:p.status_ativo, email_corporativo:p.email_corporativo, status_validacao:p.status_validacao, nota_validacao:p.nota_validacao};
   const nomeAntigo = p.nome;
   if(novoNome) p.nome = novoNome;
   if(novoCargo) p.cargo = novoCargo;
   if(novaEquipe) p.equipe_original = novaEquipe;
   p.area = novaArea;
+  p.cliente = novoCliente;
+  p.senioridade = novaSenioridade;
   p.gestor_direto_nome = novoGestor || null;
+  p.status_ativo = novoStatusAtivo;
+  p.email_corporativo = novoEmail;
   p.status_validacao = novoStatus;
   p.nota_validacao = novaNota;
 
@@ -910,6 +996,9 @@ async function saveEdit(pid){
     renderTabelaPessoas();
     renderOrganograma();
     renderLideranca();
+    renderFinanceiro();
+    renderGeral();
+    renderDiretores();
     renderLog();
     btn.textContent = 'Fechar';
     btn.disabled = false;
@@ -925,6 +1014,178 @@ async function saveEdit(pid){
     msg.className = 'msg err';
     btn.disabled = false;
     btn.textContent = 'Salvar no GitHub';
+  }
+}
+
+// ---------- EXCLUIR PESSOA ----------
+function confirmDelete(pid){
+  const p = DATA.pessoas.find(x=>x.id===pid);
+  if(!p) return;
+  const ok = window.confirm(`Excluir ${p.nome} (${pid}) da base? Isso gera um commit real no GitHub e não pode ser desfeito por aqui — só restaurando um commit anterior.`);
+  if(ok) deletePerson(pid);
+}
+
+async function deletePerson(pid){
+  const p = DATA.pessoas.find(x=>x.id===pid);
+  if(!p) return;
+  const idx = DATA.pessoas.indexOf(p);
+  const areaObj = DATA.areas.find(a=>a.area===p.area);
+  const antesPessoas = JSON.parse(JSON.stringify(DATA.pessoas));
+  const antesAreas = JSON.parse(JSON.stringify(DATA.areas));
+  DATA.pessoas.splice(idx, 1);
+  if(areaObj){
+    areaObj.pessoas = Math.max(0, (areaObj.pessoas||1) - 1);
+    areaObj.custo_total = Math.max(0, (areaObj.custo_total||0) - (p.custo_total||0));
+  }
+  try{
+    const novoTexto = JSON.stringify(DATA, null, 2);
+    const result = await ghPutFile(PATH_DATA, novoTexto, SHA_DATA, `Portal: exclusão de ${p.nome} (${pid})`);
+    SHA_DATA = result.content.sha;
+    document.getElementById('modalRoot').innerHTML = '';
+    showToast(`${p.nome} excluído(a). Commit registrado no GitHub.`);
+    renderTabelaPessoas();
+    renderOrganograma();
+    renderLideranca();
+    renderFinanceiro();
+    renderGeral();
+    renderDiretores();
+    renderLog();
+  }catch(e){
+    DATA.pessoas = antesPessoas;
+    DATA.areas = antesAreas;
+    showToast(mensagemErro(e), true);
+  }
+}
+
+// ---------- NOVA PESSOA ----------
+function openCreateModal(){
+  const areas = [...new Set(DATA.pessoas.map(x=>x.area))].sort();
+  const niveis = NIVEL_ORDER.filter(n=>n!=='Não identificado');
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3>Nova pessoa</h3>
+      <label>Nome <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="cNome" placeholder="Nome completo">
+      <label>Cargo / Função</label>
+      <input type="text" id="cCargo" placeholder="ex: Analista de Produção">
+      <label>Time / Equipe</label>
+      <input type="text" id="cEquipe">
+      <label>Área <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="cArea" list="areaOptionsList" placeholder="escolha ou digite uma área nova">
+      <datalist id="areaOptionsList">${areas.map(a=>`<option value="${a}">`).join('')}</datalist>
+      <label>Cliente</label>
+      <input type="text" id="cCliente">
+      <label>Senioridade</label>
+      <select id="cSenioridade">${niveis.map(n=>`<option value="${n}" ${n==='Júnior'?'selected':''}>${n}</option>`).join('')}</select>
+      <label>Gestor direto (nome)</label>
+      <input type="text" id="cGestor" placeholder="não identificado">
+      <label>Status ativo/inativo</label>
+      <select id="cStatusAtivo"><option value="Ativo" selected>Ativo</option><option value="Inativo">Inativo</option></select>
+      <label>E-mail corporativo</label>
+      <input type="email" id="cEmail" placeholder="nome@monumenta.com.br">
+      <div class="msg" id="cMsg"></div>
+      <div class="actions">
+        <button class="cancel" id="cCancel">Cancelar</button>
+        <button class="save" id="cSave">Criar e salvar no GitHub</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('cCancel').onclick = ()=>{ root.innerHTML=''; };
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') root.innerHTML=''; });
+  document.getElementById('cSave').onclick = createPerson;
+}
+
+function nextPersonId(){
+  let max = 0;
+  DATA.pessoas.forEach(p=>{
+    const m = /PES-(\d+)/.exec(p.id||'');
+    if(m) max = Math.max(max, parseInt(m[1],10));
+  });
+  return 'PES-' + String(max+1).padStart(4,'0');
+}
+
+async function createPerson(){
+  const btn = document.getElementById('cSave');
+  const msg = document.getElementById('cMsg');
+  const nome = document.getElementById('cNome').value.trim();
+  const area = document.getElementById('cArea').value.trim();
+  if(!nome || !area){
+    msg.textContent = 'Nome e área são obrigatórios.';
+    msg.className = 'msg err';
+    return;
+  }
+  const novoId = nextPersonId();
+  const novaPessoa = {
+    id: novoId,
+    nome,
+    cargo: document.getElementById('cCargo').value.trim(),
+    senioridade: document.getElementById('cSenioridade').value,
+    nivel_confianca: 'Alta',
+    area,
+    equipe_original: document.getElementById('cEquipe').value.trim(),
+    cliente: document.getElementById('cCliente').value.trim(),
+    gestor_direto_id: null,
+    gestor_direto_nome: document.getElementById('cGestor').value.trim() || null,
+    vp_responsavel: '',
+    confirmado_fase1: false,
+    custo_total: 0,
+    salario_base: null,
+    quantidade_vinculos: 1,
+    foto_status: 'Não',
+    foto_arquivo: null,
+    foto_chave_json: null,
+    status_validacao: 'Pendente',
+    nota_validacao: 'Cadastrado direto pelo portal.',
+    salario_proposto: null,
+    status_salario_proposto: null,
+    nota_salario_proposto: '',
+    data_salario_proposto: null,
+    nivel_anterior_proposto: null,
+    status_ativo: document.getElementById('cStatusAtivo').value,
+    email_corporativo: document.getElementById('cEmail').value.trim(),
+  };
+  DATA.pessoas.push(novaPessoa);
+  let areaObj = DATA.areas.find(a=>a.area===area);
+  if(areaObj){
+    areaObj.pessoas = (areaObj.pessoas||0) + 1;
+  } else {
+    areaObj = {area, pessoas:1, custo_total:0, vp:'', diretor_tecnico:''};
+    DATA.areas.push(areaObj);
+  }
+
+  btn.disabled = true; btn.textContent = 'Salvando...'; msg.textContent=''; msg.className='msg';
+  try{
+    const novoTexto = JSON.stringify(DATA, null, 2);
+    const result = await ghPutFile(PATH_DATA, novoTexto, SHA_DATA, `Portal: novo cadastro de ${nome} (${novoId})`);
+    SHA_DATA = result.content.sha;
+    msg.textContent = 'Criado! Commit registrado no GitHub.';
+    msg.className = 'msg ok';
+    renderPessoasFiltros();
+    renderOrganograma();
+    renderLideranca();
+    renderFinanceiro();
+    renderGeral();
+    renderDiretores();
+    renderLog();
+    btn.textContent = 'Fechar'; btn.disabled = false;
+    btn.onclick = ()=>{ document.getElementById('modalRoot').innerHTML=''; };
+  }catch(e){
+    DATA.pessoas.pop();
+    areaObj.pessoas -= 1;
+    if(areaObj.pessoas<=0){
+      const ai = DATA.areas.indexOf(areaObj);
+      if(ai>-1) DATA.areas.splice(ai,1);
+    }
+    if(e.status === 409){
+      msg.textContent = 'Alguém salvou outra alteração antes de você. Recarregue a página e tente de novo.';
+    } else {
+      msg.textContent = mensagemErro(e);
+    }
+    msg.className = 'msg err';
+    btn.disabled = false;
+    btn.textContent = 'Criar e salvar no GitHub';
   }
 }
 
@@ -969,10 +1230,10 @@ function drawFinanceiro(){
         <div class="pend-item pend-salario">
           <b>${p.nome}</b> — ${p.nivel_anterior_proposto||'?'} → ${p.senioridade}<br>
           Novo salário proposto: <span class="money">${fmtMoney(p.salario_proposto)}</span> em ${p.data_salario_proposto||''}
-          ${p.nota_salario_proposto ? '<br><span style="color:#666">Nota: '+p.nota_salario_proposto+'</span>' : ''}
-          <div style="margin-top:6px"><button class="link" data-marcar="${p.id}" style="border:1px solid #ccc;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11.5px">Marcar como aplicado na planilha</button></div>
+          ${p.nota_salario_proposto ? '<br><span style="color:var(--text-secondary)">Nota: '+p.nota_salario_proposto+'</span>' : ''}
+          <div style="margin-top:6px"><button class="btn btn-secondary btn-sm" data-marcar="${p.id}">Marcar como aplicado na planilha</button></div>
         </div>`).join('')
-    : '<p style="color:#999;padding:12px 16px">Nenhuma proposta de salário pendente no momento.</p>';
+    : '<p style="color:var(--text-tertiary);padding:12px 16px">Nenhuma proposta de salário pendente no momento.</p>';
   document.querySelectorAll('[data-marcar]').forEach(b=>{
     b.onclick = ()=>marcarSalarioAplicado(b.dataset.marcar);
   });
@@ -1033,9 +1294,9 @@ function renderAvaliacao(){
       : '<span style="color:#999;font-size:12px">Sem avaliação ainda</span>';
     return `<div class="card">
       <div style="font-weight:800">${d}</div>
-      <div style="font-size:11.5px;color:#777;margin:4px 0 10px">${areasDoD}</div>
+      <div style="font-size:11.5px;color:var(--text-secondary);margin:4px 0 10px">${areasDoD}</div>
       <div>${notaHTML}</div>
-      <div style="margin-top:10px"><button class="link" data-avaliar="${d}" style="border:1px solid #ccc;background:#fff;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px">Nova avaliação</button></div>
+      <div style="margin-top:10px"><button class="btn btn-secondary btn-sm" data-avaliar="${d}">Nova avaliação</button></div>
     </div>`;
   }).join('');
   document.querySelectorAll('[data-avaliar]').forEach(b=>{
@@ -1045,7 +1306,7 @@ function renderAvaliacao(){
   const historicoOrdenado = [...DATA.avaliacoes].sort((a,b)=>b.data.localeCompare(a.data));
   document.querySelector('#tabelaAvaliacoes tbody').innerHTML = historicoOrdenado.map(a=>`
     <tr><td>${a.diretor_nome}</td><td>${a.area||''}</td><td><span class="nota-badge nota-${notaCor(a.nota)}">${a.nota}/5</span></td><td>${a.comentario||''}</td><td>${a.data}</td><td>${a.avaliador||''}</td></tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:#999">Nenhuma avaliação registrada ainda</td></tr>';
+  `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-tertiary)">Nenhuma avaliação registrada ainda</td></tr>';
 }
 
 function openAvaliacaoModal(diretorNome){
@@ -1055,7 +1316,7 @@ function openAvaliacaoModal(diretorNome){
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h3>Avaliação — ${diretorNome}</h3>
-      <div style="font-size:11.5px;color:#999;margin-bottom:6px">Modelo inicial/rascunho — critérios definitivos a combinar.</div>
+      <div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:6px">Modelo inicial/rascunho — critérios definitivos a combinar.</div>
       <label>Nota (1 a 5)</label>
       <select id="avNota">
         <option value="5">5 — Excelente</option>
@@ -1099,6 +1360,7 @@ async function saveAvaliacao(diretorNome, areaNome){
     msg.textContent = 'Avaliação salva!';
     msg.className = 'msg ok';
     renderAvaliacao();
+    renderDiretores();
     renderLog();
     btn.textContent = 'Fechar'; btn.disabled = false;
     btn.onclick = ()=>{ document.getElementById('modalRoot').innerHTML=''; };
@@ -1115,13 +1377,51 @@ async function saveAvaliacao(diretorNome, areaNome){
   }
 }
 
+// ---------- DIRETORES TÉCNICOS E ÁREAS ----------
+function renderDiretores(){
+  const grupos = {};
+  DATA.areas.forEach(a=>{
+    const d = a.diretor_tecnico;
+    if(!d || d==='Não identificado') return;
+    (grupos[d] = grupos[d] || []).push(a);
+  });
+  const nomes = Object.keys(grupos).sort();
+  const byNameNorm = {}; DATA.pessoas.forEach(p=>{ byNameNorm[normName(p.nome)] = p; });
+  const el = document.getElementById('cardsDiretores');
+  if(!el) return;
+  el.innerHTML = nomes.map(d=>{
+    const areasDoD = grupos[d];
+    const headcount = areasDoD.reduce((s,a)=>s+(a.pessoas||0),0);
+    const pessoaDiretor = byNameNorm[normName(d)];
+    const avatar = pessoaDiretor ? avatarHTML(pessoaDiretor, 56) : `<div class="avatar" style="width:56px;height:56px;font-size:18px">${initials(d)}</div>`;
+    const historico = DATA.avaliacoes.filter(a=>a.diretor_nome===d).sort((a,b)=>b.data.localeCompare(a.data));
+    const ultima = historico[0];
+    const notaHTML = ultima
+      ? `<span class="nota-badge nota-${notaCor(ultima.nota)}">${ultima.nota}/5</span> <span style="color:var(--text-tertiary);font-size:11px">avaliado em ${ultima.data}</span>`
+      : '<span style="color:var(--text-tertiary);font-size:12px">Sem avaliação ainda</span>';
+    return `<div class="diretor-card">
+      ${avatar}
+      <div style="flex:1">
+        <div style="font-weight:800;color:var(--text)">${d}</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);margin:2px 0 8px">${pessoaDiretor ? (pessoaDiretor.cargo||'Diretor(a) Técnico(a)') : 'Diretor(a) Técnico(a)'} · ${headcount} pessoa(s) na área</div>
+        <div class="diretor-areas">${areasDoD.map(a=>`<span class="badge-area">${a.area}</span>`).join('')}</div>
+        <div style="margin-top:10px">${notaHTML}</div>
+        <div style="margin-top:10px"><button class="btn btn-secondary btn-sm" data-avaliar-diretor="${d}">Nova avaliação</button></div>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--text-tertiary)">Nenhum diretor técnico identificado nas áreas.</p>';
+  document.querySelectorAll('[data-avaliar-diretor]').forEach(b=>{
+    b.onclick = ()=>openAvaliacaoModal(b.dataset.avaliarDiretor);
+  });
+}
+
 // ---------- LOG DE ALTERAÇÕES ----------
 async function renderLog(){
   const el = document.getElementById('logList');
   el.textContent = 'Carregando...';
   try{
     const commits = await ghGetCommits(PATH_DATA, 30);
-    if(!commits.length){ el.innerHTML = '<p style="color:#999">Nenhuma alteração registrada ainda.</p>'; return; }
+    if(!commits.length){ el.innerHTML = '<p style="color:var(--text-tertiary)">Nenhuma alteração registrada ainda.</p>'; return; }
     el.innerHTML = commits.map(c=>{
       const author = c.commit.author.name || 'desconhecido';
       const date = new Date(c.commit.author.date).toLocaleString('pt-BR');
@@ -1129,7 +1429,7 @@ async function renderLog(){
       return `<div class="log-item"><span class="who">${author}</span> — ${msgFirstLine}<br><span class="when">${date}</span> · <a href="${c.html_url}" target="_blank">ver no GitHub</a></div>`;
     }).join('');
   }catch(e){
-    el.innerHTML = '<p style="color:#c0392b">Erro ao carregar histórico: ' + (e.message||e) + '</p>';
+    el.innerHTML = '<p style="color:var(--danger)">Erro ao carregar histórico: ' + (e.message||e) + '</p>';
   }
 }
 </script>
