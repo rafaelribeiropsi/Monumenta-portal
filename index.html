@@ -241,15 +241,14 @@ th.sortable .arrow{opacity:.5;font-size:9px;margin-left:3px;}
   </div>
 </header>
 <nav>
-  <button data-tab="geral" class="active">Visão Geral</button>
-  <button data-tab="organograma">Organograma por Área</button>
-  <button data-tab="lideranca">Organograma de Liderança</button>
-  <button data-tab="pessoas">Pessoas</button>
-  <button data-tab="financeiro">Controle Financeiro</button>
-  <button data-tab="avaliacao">Avaliação</button>
-  <button data-tab="diretores">Diretores</button>
-  <button data-tab="log">Log de Alterações</button>
+  <button data-grupo="geral" class="active">Visão Geral</button>
+  <button data-grupo="estrutura">Estrutura</button>
+  <button data-grupo="pessoas">Pessoas</button>
+  <button data-grupo="financeiro">Financeiro</button>
+  <button data-grupo="gestao">Gestão</button>
+  <button data-grupo="auditoria">Auditoria</button>
 </nav>
+<div class="fin-subnav" id="groupSubnav" style="display:none;margin:0 20px;padding:10px 0 0"></div>
 <main>
 
   <section class="tab active" id="tab-geral">
@@ -577,28 +576,72 @@ function showToast(text, isErr){
 }
 
 // ---------- NAV ----------
-document.querySelectorAll('nav button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab === 'log') renderLog();
-    if(btn.dataset.tab === 'organograma'){
-      const sel = document.getElementById('areaSelect');
-      if(sel && sel.value) drawArea(sel.value);
-    }
-    if(btn.dataset.tab === 'lideranca') renderLideranca();
-  });
-});
-window.addEventListener('resize', debounce(()=>{
-  const ativa = document.querySelector('nav button.active');
-  if(!ativa) return;
-  if(ativa.dataset.tab==='organograma'){
+// Menu reorganizado em 6 grupos (Fase 2 da reforma de UX/UI). Os IDs de cada
+// seção (tab-geral, tab-organograma, etc.) continuam os mesmos de sempre —
+// só a "casca" do menu mudou, nenhum conteúdo interno foi movido ou removido.
+const GRUPOS = {
+  geral:      {label:'Visão Geral', tabs:[{tab:'geral', label:'Resumo Executivo'}]},
+  estrutura:  {label:'Estrutura', tabs:[{tab:'organograma', label:'Organograma por Área'}, {tab:'lideranca', label:'Organograma de Liderança'}]},
+  pessoas:    {label:'Pessoas', tabs:[{tab:'pessoas', label:'Lista de Pessoas'}]},
+  financeiro: {label:'Financeiro', tabs:[{tab:'financeiro', label:'Controle Financeiro'}]},
+  gestao:     {label:'Gestão', tabs:[{tab:'diretores', label:'Diretores'}, {tab:'avaliacao', label:'Avaliações'}]},
+  auditoria:  {label:'Auditoria', tabs:[{tab:'log', label:'Log de Alterações'}]},
+};
+let ABA_ATIVA = 'geral';
+
+function acaoAoAbrirTab(tabKey){
+  if(tabKey === 'log') renderLog();
+  if(tabKey === 'organograma'){
     const sel = document.getElementById('areaSelect');
     if(sel && sel.value) drawArea(sel.value);
   }
-  if(ativa.dataset.tab==='lideranca') renderLideranca();
+  if(tabKey === 'lideranca') renderLideranca();
+}
+
+function mostrarTab(tabKey){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const sec = document.getElementById('tab-'+tabKey);
+  if(sec) sec.classList.add('active');
+  ABA_ATIVA = tabKey;
+  acaoAoAbrirTab(tabKey);
+}
+
+function montarSubnavGrupo(grupoKey){
+  const grupo = GRUPOS[grupoKey];
+  const subnavEl = document.getElementById('groupSubnav');
+  if(grupo.tabs.length <= 1){
+    subnavEl.style.display = 'none';
+    subnavEl.innerHTML = '';
+    return grupo.tabs[0].tab;
+  }
+  subnavEl.style.display = 'flex';
+  subnavEl.innerHTML = grupo.tabs.map((t,i)=>`<button data-tab="${t.tab}" class="${i===0?'on':''}">${t.label}</button>`).join('');
+  subnavEl.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{
+      subnavEl.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      mostrarTab(b.dataset.tab);
+    };
+  });
+  return grupo.tabs[0].tab;
+}
+
+document.querySelectorAll('nav button[data-grupo]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button[data-grupo]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const primeiraTab = montarSubnavGrupo(btn.dataset.grupo);
+    mostrarTab(primeiraTab);
+  });
+});
+montarSubnavGrupo('geral'); // estado inicial: Visão Geral, sem subnav (só 1 item nesse grupo)
+
+window.addEventListener('resize', debounce(()=>{
+  if(ABA_ATIVA==='organograma'){
+    const sel = document.getElementById('areaSelect');
+    if(sel && sel.value) drawArea(sel.value);
+  }
+  if(ABA_ATIVA==='lideranca') renderLideranca();
 }, 200));
 
 // ---------- VISÃO GERAL ----------
