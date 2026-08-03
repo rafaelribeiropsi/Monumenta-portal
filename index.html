@@ -49,6 +49,9 @@ main{padding:24px;max-width:1400px;margin:0 auto;}
 .card .label{font-size:12px;color:var(--text-secondary);margin-top:4px;}
 .card.alert{border-left-color:var(--danger);}
 .card.warn{border-left-color:var(--warn);}
+.resumo-area-card{transition:transform .15s var(--ease),box-shadow .15s var(--ease);}
+.resumo-area-card:hover{transform:translateY(-2px);}
+.resumo-area-card.ativa{box-shadow:0 0 0 2px var(--accent),0 8px 24px rgba(0,0,0,.3);}
 h2{color:var(--text);border-bottom:2px solid var(--accent);padding-bottom:6px;display:inline-block;font-family:var(--font-head);letter-spacing:-0.01em;}
 h3{color:var(--text);font-family:var(--font-head);}
 .pend-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;}
@@ -269,6 +272,11 @@ th.sortable .arrow{opacity:.5;font-size:9px;margin-left:3px;}
   <section class="tab" id="tab-organograma">
     <h2>Organograma por Área</h2>
     <p style="font-size:12.5px;color:var(--text-secondary)">Arraste o card de uma pessoa para outra faixa de senioridade para promovê-la (ou realocar o nível). Você pode registrar um novo salário — ele fica como proposta pendente até você mesmo aplicar na planilha.</p>
+
+    <h3 style="font-size:14px;margin:18px 0 4px">Resumo da estrutura</h3>
+    <div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:10px">Clique numa área para abrir o organograma dela abaixo (o mesmo que escolher no campo de seleção).</div>
+    <div class="cards" id="resumoEstrutura" style="margin-bottom:20px"></div>
+
     <div class="controls">
       <select id="areaSelect"></select>
     </div>
@@ -935,8 +943,32 @@ function renderOrganograma(){
   const sel = document.getElementById('areaSelect');
   const areas = [...DATA.areas].sort((a,b)=>b.pessoas-a.pessoas);
   sel.innerHTML = areas.map(a=>`<option value="${a.area}">${a.area} (${a.pessoas})</option>`).join('');
-  sel.onchange = ()=>drawArea(sel.value);
+  sel.onchange = ()=>{ drawArea(sel.value); marcarAreaAtivaEstrutura(sel.value); };
   drawArea(areas[0].area);
+  renderResumoEstrutura(areas[0].area);
+}
+// Resumo clicável por área — é só uma "porta de entrada" visual para o mesmo seletor/organograma
+// de sempre. Não interfere em nada do motor de árvore, arrastar-soltar ou proposta de salário.
+function renderResumoEstrutura(areaAtiva){
+  const areas = [...DATA.areas].sort((a,b)=>b.pessoas-a.pessoas);
+  document.getElementById('resumoEstrutura').innerHTML = areas.map(a=>`
+    <div class="card resumo-area-card ${a.area===areaAtiva?'ativa':''}" data-area="${a.area.replace(/"/g,'')}" style="cursor:pointer">
+      <div class="num" style="font-size:20px">${a.pessoas}</div>
+      <div class="label">${a.area}</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">${a.diretor_tecnico || 'Líder não identificado'}</div>
+    </div>`).join('');
+  document.querySelectorAll('.resumo-area-card').forEach(el=>{
+    el.onclick = ()=>{
+      document.getElementById('areaSelect').value = el.dataset.area;
+      drawArea(el.dataset.area);
+      marcarAreaAtivaEstrutura(el.dataset.area);
+    };
+  });
+}
+function marcarAreaAtivaEstrutura(areaNome){
+  document.querySelectorAll('.resumo-area-card').forEach(el=>{
+    el.classList.toggle('ativa', el.dataset.area===areaNome);
+  });
 }
 function drawArea(areaNome){
   const pessoas = DATA.pessoas.filter(p=>p.area===areaNome);
