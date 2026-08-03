@@ -187,7 +187,7 @@ tr.row-clickable:hover .edit-icon{opacity:1;}
 .fin-subnav button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-secondary);padding:8px 16px;border-radius:980px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s var(--ease);}
 .fin-subnav button:hover{color:var(--text);}
 .fin-subnav button.on{background:var(--accent);color:var(--off-black);border-color:var(--accent);}
-.area-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all .15s var(--ease);text-align:left;}
+.area-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all .15s var(--ease);text-align:left;position:relative;}
 .area-card:hover{border-color:var(--border-accent);transform:translateY(-2px);}
 .area-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
 .area-card .nome{font-weight:800;color:var(--text);font-size:14.5px;}
@@ -1528,7 +1528,8 @@ function drawFinanceiro(){
     const media = a.pessoas ? a.custo_total/a.pessoas : 0;
     const selected = a.area === AREA_SELECIONADA ? 'selected' : '';
     return `<div class="area-card ${selected}" data-area="${a.area}">
-      <div class="nome">${a.area}</div>
+      <button class="btn btn-ghost btn-sm btn-editar-area" data-area="${a.area}" style="position:absolute;top:10px;right:10px;padding:2px 9px;font-size:11px;line-height:1.4">Editar</button>
+      <div class="nome" style="padding-right:52px">${a.area}</div>
       <div class="lider">${a.diretor_tecnico || 'Líder não identificado'}</div>
       <div class="metrics">
         <div>Pessoas<b>${a.pessoas}</b></div>
@@ -1537,6 +1538,13 @@ function drawFinanceiro(){
       <span class="status-pill status-neutro">Sem orçamento cadastrado</span>
     </div>`;
   }).join('') || '<p style="color:var(--text-tertiary)">Nenhuma área encontrada para os filtros selecionados. <button class="btn btn-ghost btn-sm" id="finLimparFiltros">Limpar filtros</button></p>';
+
+  document.querySelectorAll('.btn-editar-area').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openEditAreaModal(btn.dataset.area);
+    });
+  });
 
   const limpar = document.getElementById('finLimparFiltros');
   if(limpar) limpar.onclick = ()=>{ selLider.value=''; document.getElementById('finBusca').value=''; drawFinanceiro(); };
@@ -1760,6 +1768,80 @@ async function marcarSalarioAplicado(pid){
   }catch(e){
     Object.assign(p, antes);
     showToast(mensagemErro(e), true);
+  }
+}
+
+// ---------- EDITAR ÁREA (responsável / diretor técnico) ----------
+function openEditAreaModal(areaNome){
+  const a = DATA.areas.find(x=>x.area===areaNome);
+  if(!a) return;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h3>${a.area}</h3>
+      <div style="font-size:12px;color:var(--text-tertiary)">${a.pessoas} pessoa(s) nesta área hoje</div>
+      <label>Responsável / Diretor técnico</label>
+      <input type="text" id="mAreaDiretor" value="${a.diretor_tecnico && a.diretor_tecnico!=='Não identificado' ? a.diretor_tecnico : ''}" placeholder="não identificado">
+      <label>VP responsável</label>
+      <input type="text" id="mAreaVP" value="${a.vp||''}" placeholder="não identificado">
+      <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:-2px">Isso não move ninguém no organograma — só identifica quem responde por esta área hoje. Vai aparecer no Financeiro, na Estrutura e na aba Gestão › Diretores.</div>
+      <div class="msg" id="mAreaMsg"></div>
+      <div class="divider"></div>
+      <div class="actions">
+        <button class="cancel" id="mAreaCancel">Cancelar</button>
+        <button class="save" id="mAreaSave">Salvar no GitHub</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('mAreaCancel').onclick = ()=>{ root.innerHTML=''; };
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') root.innerHTML=''; });
+  document.getElementById('mAreaSave').onclick = ()=>saveArea(areaNome);
+}
+
+async function saveArea(areaNome){
+  const btn = document.getElementById('mAreaSave');
+  const msg = document.getElementById('mAreaMsg');
+  const a = DATA.areas.find(x=>x.area===areaNome);
+  if(!a) return;
+  const novoDiretor = document.getElementById('mAreaDiretor').value.trim();
+  const novoVP = document.getElementById('mAreaVP').value.trim();
+  const antes = {diretor_tecnico:a.diretor_tecnico, vp:a.vp};
+  a.diretor_tecnico = novoDiretor || 'Não identificado';
+  a.vp = novoVP;
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  msg.textContent = '';
+  msg.className = 'msg';
+  try{
+    const novoTexto = JSON.stringify(DATA, null, 2);
+    const commitMsg = `Portal: responsável da área ${areaNome} atualizado para ${a.diretor_tecnico}`;
+    const result = await ghPutFile(PATH_DATA, novoTexto, SHA_DATA, commitMsg);
+    SHA_DATA = result.content.sha;
+    msg.textContent = 'Salvo! Commit registrado no GitHub.';
+    msg.className = 'msg ok';
+    // a lista de líderes do filtro é montada uma única vez (dataset.built) — força reconstrução
+    const selLider = document.getElementById('finFiltroLider');
+    if(selLider) selLider.removeAttribute('data-built');
+    drawFinanceiro();
+    renderDiretores();
+    const selArea = document.getElementById('areaSelect');
+    if(selArea) renderResumoEstrutura(selArea.value);
+    renderLog();
+    btn.textContent = 'Fechar';
+    btn.disabled = false;
+    btn.onclick = ()=>{ document.getElementById('modalRoot').innerHTML=''; };
+  }catch(e){
+    Object.assign(a, antes);
+    if(e.status === 409){
+      msg.textContent = 'Alguém salvou outra alteração antes de você. Recarregue a página e tente de novo.';
+    } else {
+      msg.textContent = mensagemErro(e);
+    }
+    msg.className = 'msg err';
+    btn.disabled = false;
+    btn.textContent = 'Salvar no GitHub';
   }
 }
 
