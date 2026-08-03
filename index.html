@@ -312,6 +312,9 @@ th.sortable .arrow{opacity:.5;font-size:9px;margin-left:3px;}
 
     <div class="fin-panel" id="finPanel-resumo">
       <div class="cards" id="finKpis"></div>
+      <h3 style="font-size:14px;margin:22px 0 4px">Custo por área</h3>
+      <div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:12px">Somando o custo de cada pessoa pela área em que ela está posicionada hoje na Estrutura — não é orçamento, é o custo real apurado a partir da Provisão de Custo.</div>
+      <div class="cards" id="finCustoPorArea"></div>
     </div>
 
     <div class="fin-panel" id="finPanel-areas" style="display:none">
@@ -1386,6 +1389,7 @@ function renderFinanceiro(){
       b.classList.add('on');
       drawFinanceiro();
       renderGeral();
+      renderFinCustoPorArea();
     };
   });
 
@@ -1428,13 +1432,43 @@ function renderFinKpis(){
     {label:'Custo mensal total', valor: fmtMoney(custoTotal), hint:'Soma do custo total de todas as pessoas na competência atual. Ainda não há mês anterior carregado para comparar variação.'},
     {label:'Headcount total', valor: totalPessoas + ' pessoas', hint: admissoesRecentes + ' admissão(ões) identificada(s) nos últimos 12 meses (pela data de admissão). Não há dado de desligamentos ainda, então turnover não pode ser calculado.'},
     {label:'Custo médio por pessoa', valor: fmtMoney(custoMedio), hint:'Custo total ÷ headcount. Não é o mesmo que salário médio — inclui encargos, benefícios e adicionais.'},
-    {label:'Orçamento vs. Realizado', valor:'Sem orçamento cadastrado', hint:'Nenhuma fonte do projeto traz orçamento por área ainda. Ver aba "Orçamento e Projeções".', neutro:true},
   ];
   document.getElementById('finKpis').innerHTML = cards.map(c=>`
     <div class="card" title="${c.hint.replace(/"/g,'')}">
       <div class="num" style="${c.neutro?'font-size:16px;color:var(--text-tertiary)':''}">${c.valor}</div>
       <div class="label">${c.label}</div>
     </div>`).join('');
+  renderFinCustoPorArea();
+}
+
+// Custo por área: recalculado direto de DATA.pessoas agrupando por área (não usa o
+// DATA.areas[].custo_total pré-calculado), para garantir que reflete exatamente quem
+// está posicionado em cada área no organograma agora — mesmo depois de um CRUD de pessoa.
+function renderFinCustoPorArea(){
+  const isRH = modoValores === 'rh';
+  const porArea = {};
+  DATA.pessoas.forEach(p=>{
+    const a = p.area || 'Sem área definida';
+    if(!porArea[a]) porArea[a] = {custo:0, pessoas:0};
+    porArea[a].custo += p.custo_total||0;
+    porArea[a].pessoas += 1;
+  });
+  const areas = Object.keys(porArea).sort((a,b)=> isRH ? porArea[b].custo-porArea[a].custo : porArea[b].pessoas-porArea[a].pessoas);
+  document.getElementById('finCustoPorArea').innerHTML = areas.map(a=>{
+    const d = porArea[a];
+    if(isRH){
+      return `<div class="card" title="${d.pessoas} pessoa(s) nesta área hoje">
+        <div class="num" style="font-size:19px">${fmtMoney(d.custo)}</div>
+        <div class="label">${a}</div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">${d.pessoas} pessoa(s)</div>
+      </div>`;
+    }
+    return `<div class="card" title="Ative Visão RH para ver o custo desta área">
+      <div class="num" style="font-size:19px">${d.pessoas}</div>
+      <div class="label">${a}</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">pessoa(s) · custo em Visão RH</div>
+    </div>`;
+  }).join('');
 }
 
 function drawFinanceiro(){
