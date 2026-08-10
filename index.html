@@ -336,12 +336,25 @@ th.sortable .arrow{opacity:.5;font-size:9px;margin-left:3px;}
       </div>
       <div class="cards" id="cardsAreas" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))"></div>
       <div id="areaDetalhe"></div>
+
+      <!-- Freelancers dedicados -->
+      <div id="freelancersPanel" style="margin-top:28px">
+        <h3 style="font-size:14px;margin:0 0 6px;color:var(--text)">
+          Freelancers
+          <span id="freelas-count" style="background:#a78bfa22;color:#a78bfa;border:1px solid #a78bfa55;border-radius:980px;font-size:11px;font-weight:600;padding:2px 10px;margin-left:8px;vertical-align:middle"></span>
+        </h3>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">
+          Pessoas marcadas com <code>is_freelancer = true</code> no cadastro. Para adicionar um freela, edite a pessoa e ative a flag. O custo deles <em>também</em> contabiliza na área original.
+        </div>
+        <div id="freelas-bignumber" style="margin-bottom:16px"></div>
+        <div id="freelas-lista" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px"></div>
+      </div>
     </div>
 
     <div class="fin-panel" id="finPanel-pessoas" style="display:none">
       <h3 id="tituloIndividual">Por pessoa</h3>
       <table id="tabelaValores">
-        <thead><tr><th>Pessoa</th><th>Área</th><th>Vínculo</th><th id="thCusto">Custo Total</th></tr></thead>
+        <thead><tr><th>Pessoa</th><th>Área</th><th>Cargo / Senioridade</th><th>Salário Base</th><th id="thCusto">Custo Total</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -1136,6 +1149,10 @@ function openEditModal(pid){
       <input type="email" id="mEmail" value="${p.email_corporativo||''}" placeholder="nome@monumenta.com.br">
       <label>Status de validação</label>
       <select id="mStatus">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===(p.status_validacao||'Pendente')?'selected':''}>${s}</option>`).join('')}</select>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="mFreelancer" ${p.is_freelancer?'checked':''} style="width:16px;height:16px;accent-color:#a78bfa">
+        <span>É freelancer <span style="font-size:11px;color:var(--text-tertiary)">(agrupa na seção Freelancers do Financeiro)</span></span>
+      </label>
       <label>Nota (opcional — explique a correção)</label>
       <textarea id="mNota">${p.nota_validacao||''}</textarea>
       <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px">Valores financeiros (salário/custo) não são editáveis aqui — corrija na planilha Base Mestra ou use o organograma para propor uma promoção.</div>
@@ -1172,7 +1189,7 @@ async function saveEdit(pid){
   const novaNota = document.getElementById('mNota').value.trim();
 
   const p = DATA.pessoas.find(x=>x.id===pid);
-  const antes = {nome:p.nome, cargo:p.cargo, equipe_original:p.equipe_original, area:p.area, cliente:p.cliente, senioridade:p.senioridade, gestor_direto_nome:p.gestor_direto_nome, status_ativo:p.status_ativo, email_corporativo:p.email_corporativo, status_validacao:p.status_validacao, nota_validacao:p.nota_validacao};
+  const antes = {nome:p.nome, cargo:p.cargo, equipe_original:p.equipe_original, area:p.area, cliente:p.cliente, senioridade:p.senioridade, gestor_direto_nome:p.gestor_direto_nome, status_ativo:p.status_ativo, email_corporativo:p.email_corporativo, status_validacao:p.status_validacao, nota_validacao:p.nota_validacao, is_freelancer:p.is_freelancer};
   const nomeAntigo = p.nome;
   if(novoNome) p.nome = novoNome;
   if(novoCargo) p.cargo = novoCargo;
@@ -1185,6 +1202,7 @@ async function saveEdit(pid){
   p.email_corporativo = novoEmail;
   p.status_validacao = novoStatus;
   p.nota_validacao = novaNota;
+  p.is_freelancer = document.getElementById('mFreelancer')?.checked || false;
 
   btn.disabled = true;
   btn.textContent = 'Salvando...';
@@ -1486,21 +1504,28 @@ function renderFinCustoPorArea(){
     porArea[a].pessoas += 1;
   });
   const areas = Object.keys(porArea).sort((a,b)=> isRH ? porArea[b].custo-porArea[a].custo : porArea[b].pessoas-porArea[a].pessoas);
+  // Freelancers: pessoas com is_freelancer=true ou tipo_vinculo='Freela'
+  const freelancers = DATA.pessoas.filter(p=>p.is_freelancer || p.tipo_vinculo==='Freela');
+  const custoFreelas = freelancers.reduce((s,p)=>s+(p.custo_total||0),0);
+
   document.getElementById('finCustoPorArea').innerHTML = areas.map(a=>{
     const d = porArea[a];
-    if(isRH){
-      return `<div class="card" title="${d.pessoas} pessoa(s) nesta área hoje">
-        <div class="num" style="font-size:19px">${fmtMoney(d.custo)}</div>
-        <div class="label">${a}</div>
-        <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">${d.pessoas} pessoa(s)</div>
-      </div>`;
-    }
-    return `<div class="card" title="Ative Visão RH para ver o custo desta área">
-      <div class="num" style="font-size:19px">${d.pessoas}</div>
+    const custo = isRH
+      ? `<div class="num" style="font-size:26px;font-weight:800;line-height:1.1;color:var(--accent)">${fmtMoney(d.custo)}</div>`
+      : `<div class="num" style="font-size:13px;color:var(--text-tertiary);padding:8px 0">🔒 Visão RH necessária</div>`;
+    return `<div class="card" title="${d.pessoas} pessoa(s) nesta área">
+      ${custo}
       <div class="label">${a}</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">pessoa(s) · custo em Visão RH</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">${d.pessoas} pessoa(s)${isRH && d.pessoas ? ' · ' + fmtMoney(d.custo/d.pessoas) + '/pessoa' : ''}</div>
     </div>`;
-  }).join('');
+  }).join('')
+  + `<div class="card" style="border-left-color:#a78bfa;order:-1" title="${freelancers.length} freelancer(s) cadastrado(s)">
+    ${isRH
+      ? `<div class="num" style="font-size:26px;font-weight:800;line-height:1.1;color:#a78bfa">${fmtMoney(custoFreelas)}</div>`
+      : `<div class="num" style="font-size:13px;color:var(--text-tertiary);padding:8px 0">🔒 Visão RH necessária</div>`}
+    <div class="label">Freelancers</div>
+    <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">${freelancers.length} pessoa(s) · tag <code>is_freelancer</code></div>
+  </div>`;
 }
 
 function drawFinanceiro(){
@@ -1533,7 +1558,9 @@ function drawFinanceiro(){
       <div class="lider">${a.diretor_tecnico || 'Líder não identificado'}</div>
       <div class="metrics">
         <div>Pessoas<b>${a.pessoas}</b></div>
-        ${isRH ? `<div>Custo total<b>${fmtMoney(a.custo_total)}</b></div><div>Média/pessoa<b>${fmtMoney(media)}</b></div>` : ''}
+        ${isRH
+          ? `<div style="grid-column:1/-1;margin-top:4px"><span style="font-size:22px;font-weight:800;color:var(--accent)">${fmtMoney(a.custo_total)}</span><span style="font-size:11px;color:var(--text-tertiary)"> / mês</span></div><div>Média/pessoa<b>${fmtMoney(media)}</b></div>`
+          : `<div style="grid-column:1/-1;font-size:11px;color:var(--text-tertiary);margin-top:4px">🔒 Custo disponível em Visão RH</div>`}
       </div>
       <span class="status-pill status-neutro">Sem orçamento cadastrado</span>
     </div>`;
@@ -1556,18 +1583,48 @@ function drawFinanceiro(){
     });
   });
 
+  // ── Painel Freelancers ──────────────────────────────────────
+  const freelas = DATA.pessoas.filter(p=>p.is_freelancer || p.tipo_vinculo==='Freela');
+  const custoFreelasTotal = freelas.reduce((s,p)=>s+(p.custo_total||0),0);
+  const bnEl = document.getElementById('freelas-bignumber');
+  const ctEl = document.getElementById('freelas-count');
+  const lstEl = document.getElementById('freelas-lista');
+  if(ctEl) ctEl.textContent = freelas.length + ' pessoa(s)';
+  if(bnEl){
+    bnEl.innerHTML = isRH
+      ? `<div style="display:flex;align-items:baseline;gap:6px">
+           <span style="font-size:36px;font-weight:800;color:#a78bfa">${fmtMoney(custoFreelasTotal)}</span>
+           <span style="font-size:12px;color:var(--text-tertiary)">/ mês · custo total freelas</span>
+         </div>`
+      : `<div style="font-size:13px;color:var(--text-tertiary);padding:8px 0">🔒 Ative Visão RH para ver o custo dos freelas</div>`;
+  }
+  if(lstEl){
+    lstEl.innerHTML = freelas.length
+      ? freelas.map(p=>`
+          <div style="background:var(--surface);border:1px solid #a78bfa33;border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:12px">
+            ${miniAvatarHTML(p)}
+            <div>
+              <div style="font-weight:700;font-size:13px">${p.nome}</div>
+              <div style="font-size:11px;color:var(--text-tertiary)">${p.area} · ${p.senioridade||p.cargo||'—'}</div>
+              ${isRH ? `<div style="font-size:12px;color:#a78bfa;margin-top:2px">${fmtMoney(p.custo_total)}/mês</div>` : ''}
+            </div>
+          </div>`).join('')
+      : `<div style="color:var(--text-tertiary);font-size:13px;padding:12px 0">Nenhum freelancer cadastrado ainda. Edite uma pessoa e ative "É freelancer" para listá-la aqui.</div>`;
+  }
+
   if(!AREA_SELECIONADA && areas.length) AREA_SELECIONADA = areas[0].area;
   renderAreaDetalhe(AREA_SELECIONADA, isRH);
 
   document.getElementById('tituloIndividual').innerHTML = isRH ? 'Por pessoa <span class="confidential">(confidencial)</span>' : 'Por pessoa';
-  document.getElementById('thCusto').textContent = isRH ? 'Custo Total' : 'Vínculos';
+  document.getElementById('thCusto').textContent = isRH ? 'Custo Total' : '—';
   const pessoas = [...DATA.pessoas].sort((a,b)=> isRH ? (b.custo_total||0)-(a.custo_total||0) : a.nome.localeCompare(b.nome));
   document.querySelector('#tabelaValores tbody').innerHTML = pessoas.map(p=>`
     <tr>
       <td><div class="row-person">${miniAvatarHTML(p)}<span>${p.nome}</span></div></td>
       <td>${p.area}</td>
-      <td>${p.tipo_vinculo || '—'}</td>
-      <td class="money">${isRH ? fmtMoney(p.custo_total) : p.quantidade_vinculos}</td>
+      <td style="font-size:12px">${p.cargo||'—'}<br><span style="color:var(--text-tertiary)">${p.senioridade||''}</span></td>
+      <td class="money">${isRH ? fmtMoney(p.salario_base) : '🔒'}</td>
+      <td class="money">${isRH ? fmtMoney(p.custo_total) : '🔒'}</td>
     </tr>`).join('');
 
   const pendentes = DATA.pessoas.filter(p=>p.status_salario_proposto==='Pendente');
