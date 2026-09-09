@@ -371,6 +371,10 @@ async function rhBoot(){
         base.status = p.status === 'Aprovado' ? 'validado' : p.status === 'Rejeitado' ? 'correcao_solicitada' : 'em_conferencia';
         base.progresso = 90;
       }
+      // "Concluído" é uma etapa administrativa à parte (o colaborador já foi
+      // aprovado e ativado) — por isso fica num campo próprio no convite, em
+      // vez de sobrescrever o status derivado da proposta acima.
+      if(c.concluido) base.status = 'concluido';
       return base;
     });
     // Mantém os 2 cadastros de demonstração (não existem no GitHub) + os reais.
@@ -415,6 +419,35 @@ const BENEFICIOS_CATALOGO = [
 // diretamente na etapa de Benefícios do portal.
 const DOCS_PJ = ['Cartão CNPJ','Contrato social e últimas alterações','Comprovante de inscrição e situação cadastral (Receita Federal)','Documento de identificação do representante legal','Comprovante de conta bancária da empresa','Comprovante de endereço da empresa'];
 const DOCS_CLT = ['RG','CPF','Comprovante de residência','Carteira de Trabalho Digital (print ou nº)','Comprovante de escolaridade','Foto para uso interno'];
+
+// Upload real de documentos: lê o arquivo do próprio navegador do colaborador
+// e converte para base64, que vai dentro do cadastro enviado à ponte segura
+// (Worker) e fica salvo no Financeiro junto com o resto dos dados. Por isso
+// o limite por arquivo é conservador — ver TAMANHO_MAXIMO_PAYLOAD no Worker.
+const MAX_DOC_BYTES = 3 * 1024 * 1024; // 3 MB por arquivo
+function lerArquivoComoBase64(file){
+  return new Promise((resolve, reject)=>{
+    if(!file) { reject(new Error('Nenhum arquivo selecionado.')); return; }
+    if(file.size > MAX_DOC_BYTES){
+      reject(new Error(`Arquivo muito grande (${(file.size/1024/1024).toFixed(1)} MB) — o limite é ${(MAX_DOC_BYTES/1024/1024).toFixed(0)} MB.`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve({ nomeArquivo:file.name, tipo:file.type||'application/octet-stream', tamanho:file.size, conteudoBase64: String(reader.result).split(',')[1] });
+    reader.onerror = () => reject(new Error('Não consegui ler o arquivo. Tente novamente.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Catálogo de políticas internas — PENDENTE: trocar pelos PDFs reais da
+// Monumenta (título + nome do arquivo). Os arquivos devem ser publicados na
+// pasta "politicas/" do mesmo repositório do GitHub Pages (Monumenta-portal).
+const POLITICAS_BASE_URL = 'https://rafaelribeiropsi.github.io/Monumenta-portal/politicas/';
+const POLITICAS_CATALOGO = [
+  { id:'codigo-conduta', titulo:'Código de Conduta', arquivo:'codigo-de-conduta.pdf', versao:'2026-01' },
+  { id:'seguranca-informacao', titulo:'Política de Segurança da Informação', arquivo:'politica-seguranca-informacao.pdf', versao:'2026-01' },
+  { id:'rh-beneficios', titulo:'Políticas de RH e Benefícios', arquivo:'politicas-rh-beneficios.pdf', versao:'2026-01' },
+];
 
 function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,8); }
 
@@ -540,6 +573,7 @@ async function ensurePortalToken(token){
       cargo:c.cargo, senioridade:c.senioridade, area:c.area, equipe:c.equipe,
       gestor:c.gestor, diretor:c.diretor, dataInicio:c.dataInicio,
       status:c.status||'convite_enviado', progresso:10,
+      motivoRejeicao: c.motivoRejeicao || null, aceitesPoliticas: c.aceitesPoliticas || [],
       onboarding:{}, beneficiosDefinidos:{}, respostas:{}, solicitacoesCorrecao:[], documentos:{},
     });
     return true;
@@ -584,6 +618,7 @@ function render(){
       else if(parts[2]==='step') app.innerHTML = viewPortalStep(token, parseInt(parts[3]||'0'));
       else if(parts[2]==='revisao') app.innerHTML = viewPortalRevisao(token);
       else if(parts[2]==='concluido') app.innerHTML = viewPortalConcluido(token);
+      else if(parts[2]==='politicas') app.innerHTML = viewPortalPoliticas(token);
     }
   }catch(e){
     console.error(e);
@@ -888,9 +923,18 @@ function viewRHProcesso(id){
     </div>`).join('') || `<div class="hint">Nenhuma solicitação de correção do colaborador.</div>`;
 
   const docsList = (c.modelo==='PJ'?DOCS_PJ:DOCS_CLT).map(d=>{
-    const st = (c.documentos||{})[d] || 'pendente';
-    const badge = st==='enviado' ? 'badge-lime' : 'badge-grey';
-    return `<div class="doc-row"><div class="name">${d}</div><span class="badge ${badge}">${st==='enviado'?'Enviado':'Pendente'}</span></div>`;
+    const doc = (c.documentos||{})[d];
+    const enviado = !!doc && (doc.status==='enviado' || doc==='enviado');
+    const podeBaixar = !!(doc && doc.conteudoBase64);
+    const badge = enviado ? 'badge-lime' : 'badge-grey';
+    const dEsc = d.replace(/'/g,"\\'");
+    return `<div class="doc-row">
+      <div class="name">${d}${podeBaixar?` <span class="opt">(${doc.nomeArquivo||''})</span>`:''}</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="badge ${badge}">${enviado?'Enviado':'Pendente'}</span>
+        ${podeBaixar?`<button type="button" class="btn btn-secondary btn-sm" onclick="baixarDocumento('${c.id}','${dEsc}')">Baixar</button>`:''}
+      </div>
+    </div>`;
   }).join('');
 
   return `
@@ -979,10 +1023,12 @@ function viewRHProcesso(id){
         <div class="card">
           <h4 style="margin-bottom:14px;">Ações de conferência</h4>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-primary btn-sm" onclick="setStatus('${c.id}','validado')">Aprovar / validar</button>
-            <button class="btn btn-secondary btn-sm" onclick="setStatus('${c.id}','correcao_solicitada')">Solicitar correção</button>
-            <button class="btn btn-secondary btn-sm" onclick="setStatus('${c.id}','concluido')">Marcar como concluído</button>
+            <button class="btn btn-primary btn-sm" onclick="aprovarCadastro('${c.id}')">Aprovar / validar</button>
+            <button class="btn btn-secondary btn-sm" onclick="solicitarCorrecaoRH('${c.id}')">Solicitar correção</button>
+            <button class="btn btn-secondary btn-sm" onclick="concluirCadastro('${c.id}')">Marcar como concluído</button>
           </div>
+          ${!ehCadastroDemo(c) ? '<div class="hint" style="margin-top:8px;">Aprovar/rejeitar exige que o colaborador já tenha enviado o cadastro (aparece como "Em conferência").</div>' : ''}
+          <div class="hint" id="msgAcaoConferencia" style="margin-top:10px;"></div>
         </div>
       </div>
     </div>
@@ -996,6 +1042,74 @@ function copyLink(){
 function setStatus(id, status){
   const c = findById(id); c.status = status;
   render(); showToast('Status atualizado: ' + STATUS_LABELS[status]);
+}
+function ehCadastroDemo(c){ return (c?.token||'').startsWith('demo-'); }
+
+/* ---- Aprovação/rejeição real (grava no GitHub) ---- */
+async function aprovarCadastro(id){
+  const c = findById(id);
+  if(ehCadastroDemo(c)){ setStatus(id,'validado'); return; }
+  await gravarDecisaoProposta(id, 'validado', 'Aprovado', null);
+}
+async function solicitarCorrecaoRH(id){
+  const c = findById(id);
+  const motivo = prompt('O que precisa ser corrigido? (o colaborador vai ver essa mensagem no portal dele)');
+  if(!motivo) return;
+  if(ehCadastroDemo(c)){ setStatus(id,'correcao_solicitada'); return; }
+  await gravarDecisaoProposta(id, 'correcao_solicitada', 'Rejeitado', motivo);
+}
+// Sempre relê os dois arquivos na hora de gravar (em vez de reusar o SHA
+// guardado no boot), para não sobrescrever uma alteração feita em paralelo
+// por outra pessoa do RH nesse meio-tempo.
+async function gravarDecisaoProposta(id, statusConvite, decisaoProposta, motivo){
+  const c = findById(id);
+  const msg = document.getElementById('msgAcaoConferencia');
+  if(msg){ msg.textContent = 'Gravando...'; msg.className = 'hint'; }
+  try{
+    const { data, sha } = await ghGetFile(GH_REPO_FINANCEIRO, PATH_PROPOSTAS);
+    const arquivo = data || { propostas: [] };
+    const p = (arquivo.propostas||[]).find(x=>x.token===c.token);
+    if(!p) throw new Error('Este colaborador ainda não enviou o cadastro — não há proposta para decidir.');
+    p.status = decisaoProposta;
+    p.decidido_em = new Date().toISOString();
+    if(motivo) p.motivo_decisao = motivo; else delete p.motivo_decisao;
+    await ghPutFile(GH_REPO_FINANCEIRO, PATH_PROPOSTAS, arquivo, sha, `Onboarding: ${decisaoProposta} — ${c.nome}`);
+
+    const { data: dadosConvites, sha: shaConvites } = await ghGetFile(GH_REPO_CADASTRO, PATH_CONVITES);
+    const conviteArquivo = dadosConvites || { convites: [] };
+    const convite = (conviteArquivo.convites||[]).find(x=>x.token===c.token);
+    if(convite){
+      convite.status = statusConvite;
+      if(motivo) convite.motivoRejeicao = motivo; else delete convite.motivoRejeicao;
+      await ghPutFile(GH_REPO_CADASTRO, PATH_CONVITES, conviteArquivo, shaConvites, `Onboarding: status ${statusConvite} — ${c.nome}`);
+    }
+    c.status = statusConvite;
+    if(motivo) c.motivoRejeicao = motivo; else delete c.motivoRejeicao;
+    if(msg) msg.textContent = '';
+    render(); showToast('Status atualizado: ' + (STATUS_LABELS[statusConvite]||statusConvite));
+  }catch(e){
+    if(msg){ msg.textContent = 'Não consegui gravar (' + e.message + ').'; msg.className = 'hint hint-err'; }
+  }
+}
+async function concluirCadastro(id){
+  const c = findById(id);
+  if(ehCadastroDemo(c)){ setStatus(id,'concluido'); return; }
+  const msg = document.getElementById('msgAcaoConferencia');
+  if(msg){ msg.textContent = 'Gravando...'; msg.className = 'hint'; }
+  try{
+    const { data, sha } = await ghGetFile(GH_REPO_CADASTRO, PATH_CONVITES);
+    const arquivo = data || { convites: [] };
+    const convite = (arquivo.convites||[]).find(x=>x.token===c.token);
+    if(!convite) throw new Error('Convite não encontrado.');
+    convite.concluido = true;
+    convite.concluido_em = new Date().toISOString();
+    await ghPutFile(GH_REPO_CADASTRO, PATH_CONVITES, arquivo, sha, `Onboarding: concluído — ${c.nome}`);
+    c.status = 'concluido';
+    if(msg) msg.textContent = '';
+    render(); showToast('Marcado como concluído');
+  }catch(e){
+    if(msg){ msg.textContent = 'Não consegui gravar (' + e.message + ').'; msg.className = 'hint hint-err'; }
+  }
 }
 function reagendarOnboarding(id){
   const c = findById(id);
@@ -1015,6 +1129,34 @@ function salvarBeneficios(ev, id){
 /* =========================================================================
    PORTAL DO COLABORADOR — BOAS-VINDAS
    ========================================================================= */
+function statusBannerHtml(c){
+  if(c.status === 'correcao_solicitada'){
+    return `<section class="feature-section reveal">
+      <div class="card" style="border-color: rgba(255,107,107,.4); max-width:680px; margin:0 auto;">
+        <h4 style="color:var(--danger); margin-bottom:10px;">O RH pediu um ajuste no seu cadastro</h4>
+        <p style="color:var(--text-secondary); font-size:14.5px; line-height:1.6;">${c.motivoRejeicao || 'Confira as informações e reenvie.'}</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:14px;" onclick="location.hash='#/portal/${c.token}/step/0'">Corrigir e reenviar</button>
+      </div>
+    </section>`;
+  }
+  if(c.status === 'validado' || c.status === 'concluido'){
+    return `<section class="feature-section reveal">
+      <div class="card" style="border-color: var(--border-accent); max-width:680px; margin:0 auto; text-align:center;">
+        <h4 style="color:var(--accent); margin-bottom:10px;">Cadastro aprovado ✓</h4>
+        <p style="color:var(--text-secondary); font-size:14.5px;">Seu cadastro foi conferido e validado pelo RH da Monumenta.</p>
+      </div>
+    </section>`;
+  }
+  if(c.status === 'em_conferencia' || c.status === 'enviado'){
+    return `<section class="feature-section reveal">
+      <div class="card" style="max-width:680px; margin:0 auto; text-align:center;">
+        <h4 style="margin-bottom:10px;">Cadastro enviado — em conferência</h4>
+        <p style="color:var(--text-secondary); font-size:14.5px;">O time de RH está revisando suas informações. Avisamos por aqui se algo precisar de ajuste.</p>
+      </div>
+    </section>`;
+  }
+  return '';
+}
 function viewPortalWelcome(token){
   const c = findByToken(token);
   if(!c) return `<div class="container narrow"><div class="empty-state"><h3>Link inválido ou expirado</h3><p class="hint">Fale com o RH da Monumenta para receber um novo link.</p></div></div>`;
@@ -1029,6 +1171,7 @@ function viewPortalWelcome(token){
     <a href="#secDados">Seus dados</a>
     <a href="#secOnboarding">Onboarding</a>
     <a href="#secDocumentos">Documentos</a>
+    <a href="#/portal/${c.token}/politicas">Políticas</a>
     <a href="#secComecar">Começar</a>
   </div>
 
@@ -1042,6 +1185,8 @@ function viewPortalWelcome(token){
       <a class="link-more" href="#secDados">Ver detalhes ↓</a>
     </div>
   </section>
+
+  ${statusBannerHtml(c)}
 
   <section class="feature-section reveal" id="secDados">
     <span class="kicker">Confira antes de começar</span>
@@ -1094,6 +1239,18 @@ function viewPortalWelcome(token){
     <h2>O que você vai precisar.</h2>
     <div class="tile-grid">
       ${docs.map(d=>`<div class="tile"><span class="dot"></span>${d}</div>`).join('')}
+    </div>
+  </section>
+
+  <section class="feature-section alt reveal" id="secPoliticas">
+    <span class="kicker">Antes de começar</span>
+    <h2>Políticas da Monumenta.</h2>
+    <div class="feature-grid">
+      <div class="feature-visual"><div class="avatar-badge">📄</div></div>
+      <div>
+        <p>Leia e baixe as políticas internas da Monumenta e confirme que está ciente. Você pode voltar aqui quando quiser, inclusive depois de concluir o cadastro.</p>
+        <button class="btn btn-secondary" onclick="location.hash='#/portal/${c.token}/politicas'">Ver políticas</button>
+      </div>
     </div>
   </section>
 
@@ -1376,18 +1533,50 @@ function validarTelefoneEmergencia(input){
 function docsUploadHtml(c, list){
   c.documentos = c.documentos||{};
   return `
-    <div class="hint" style="margin-bottom:10px;">Envie os arquivos abaixo (PDF, JPG ou PNG). Você pode voltar depois para substituir um documento.</div>
-    ${list.map((d,i)=>`
+    <div class="hint" style="margin-bottom:10px;">Envie os arquivos abaixo (PDF, JPG ou PNG, até ${(MAX_DOC_BYTES/1024/1024).toFixed(0)}MB cada). Você pode voltar depois para substituir um documento.</div>
+    ${list.map((d,i)=>{
+      const doc = c.documentos[d];
+      const enviado = !!doc && doc.status==='enviado';
+      return `
       <div class="doc-row">
-        <div class="name">${d}</div>
-        <input type="file" name="doc_${i}" style="max-width:220px;" onchange="marcarDoc('${c.id}','${d.replace(/'/g,"\\'")}')">
+        <div class="name">${d}${enviado?` <span class="opt">(${doc.nomeArquivo||''})</span>`:''}</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          ${enviado?'<span class="badge badge-lime">Enviado</span>':''}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" name="doc_${i}" style="max-width:200px;" onchange="marcarDoc('${c.id}','${d.replace(/'/g,"\\'")}', this)">
+        </div>
       </div>
-    `).join('')}
+    `;}).join('')}
+    <div class="hint" id="msgUploadDocs" style="margin-top:6px;"></div>
   `;
 }
-function marcarDoc(id, nomeDoc){
-  const c = findById(id); c.documentos = c.documentos||{}; c.documentos[nomeDoc] = 'enviado';
-  showToast('Arquivo anexado: ' + nomeDoc);
+async function marcarDoc(id, nomeDoc, inputEl){
+  const c = findById(id); c.documentos = c.documentos||{};
+  const file = inputEl.files[0];
+  if(!file) return;
+  const msg = document.getElementById('msgUploadDocs');
+  try{
+    const dados = await lerArquivoComoBase64(file);
+    c.documentos[nomeDoc] = { status:'enviado', ...dados };
+    if(msg){ msg.textContent = ''; msg.className = 'hint'; }
+    showToast('Arquivo anexado: ' + nomeDoc);
+    document.getElementById('app').innerHTML = viewPortalStep(c.token, currentStepIndexFromHash());
+  }catch(e){
+    inputEl.value = '';
+    if(msg){ msg.textContent = e.message; msg.className = 'hint hint-err'; } else showToast(e.message);
+  }
+}
+function currentStepIndexFromHash(){
+  const parts = location.hash.replace('#/','').split('/');
+  return parseInt(parts[3]||'0');
+}
+function baixarDocumento(id, nomeDoc){
+  const c = findById(id);
+  const doc = (c.documentos||{})[nomeDoc];
+  if(!doc || !doc.conteudoBase64){ showToast('Documento não disponível para download.'); return; }
+  const link = document.createElement('a');
+  link.href = `data:${doc.tipo||'application/octet-stream'};base64,${doc.conteudoBase64}`;
+  link.download = doc.nomeArquivo || nomeDoc;
+  document.body.appendChild(link); link.click(); link.remove();
 }
 
 function dependentesHtml(c){
@@ -1531,19 +1720,27 @@ function beneficiosHtml(c){
         <div class="hint">${b.desc}</div>
         ${b.documentoNecessario ? `
           <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <input type="file" onchange="marcarBeneficioDoc('${c.id}','${b.id}')" style="max-width:220px;">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="marcarBeneficioDoc('${c.id}','${b.id}', this)" style="max-width:220px;">
             <span class="badge ${st==='enviado'?'badge-lime':'badge-grey'}">${st==='enviado'?'Enviado':'Pendente: '+b.documentoNecessario}</span>
           </div>` : `<div class="hint" style="margin-top:6px;">Sem documento necessário para este benefício.</div>`}
       </div>
     </div>`;
   }).join('')}`;
 }
-function marcarBeneficioDoc(id, beneficioId){
+async function marcarBeneficioDoc(id, beneficioId, inputEl){
   const c = findById(id);
   c.respostas.beneficios = c.respostas.beneficios || {};
-  c.respostas.beneficios[beneficioId] = { documentoEnviado:true };
-  showToast('Documento enviado para conferência do RH');
-  document.getElementById('app').innerHTML = viewPortalStep(c.token, 4);
+  const file = inputEl.files[0];
+  if(!file) return;
+  try{
+    const dados = await lerArquivoComoBase64(file);
+    c.respostas.beneficios[beneficioId] = { documentoEnviado:true, ...dados };
+    showToast('Documento enviado para conferência do RH');
+    document.getElementById('app').innerHTML = viewPortalStep(c.token, 4);
+  }catch(e){
+    inputEl.value = '';
+    showToast(e.message);
+  }
 }
 
 function termosHtml(c, tipo){
@@ -1646,6 +1843,7 @@ async function enviarCadastro(token){
         gestor: c.gestor, diretor: c.diretor, clienteProjeto: c.clienteProjeto, centroCusto: c.centroCusto,
         dataInicio: c.dataInicio,
         respostas: c.respostas || {},
+        documentos: c.documentos || {},
       }),
     });
     const result = await resp.json().catch(()=>({ok:false, error:'Resposta inesperada do servidor.'}));
@@ -1671,9 +1869,66 @@ function viewPortalConcluido(token){
       <div style="font-size:40px; color:var(--accent); margin-bottom:16px;">✓</div>
       <h1 class="section-title">Cadastro enviado, ${c.nomePreferencial}!</h1>
       <p class="section-sub">O time de RH da Monumenta vai conferir suas informações. Qualquer pendência ou dúvida, você será avisado por e-mail.</p>
-      <button class="btn btn-secondary" onclick="location.hash='#/rh/processo/${c.id}'">Ver como o RH vê este processo →</button>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="location.hash='#/portal/${token}/politicas'">Ver políticas da Monumenta</button>
+        <button class="btn btn-secondary" onclick="location.hash='#/rh/processo/${c.id}'">Ver como o RH vê este processo →</button>
+      </div>
     </div>
   </div>`;
+}
+
+/* =========================================================================
+   PORTAL — POLÍTICAS (leitura, download e aceite)
+   ========================================================================= */
+function viewPortalPoliticas(token){
+  const c = findByToken(token);
+  if(!c) return `<div class="container narrow"><div class="empty-state">Link inválido.</div></div>`;
+  c.aceitesPoliticas = c.aceitesPoliticas || [];
+  const linhas = POLITICAS_CATALOGO.map(p=>{
+    const aceite = c.aceitesPoliticas.find(a=>a.politicaId===p.id && a.versao===p.versao);
+    const url = POLITICAS_BASE_URL + p.arquivo;
+    return `
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:600;">${p.titulo}</div>
+          <div class="hint">${aceite ? 'Aceito em ' + new Date(aceite.aceito_em).toLocaleDateString('pt-BR') : 'Ainda não aceito'}</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a class="btn btn-secondary btn-sm" href="${url}" target="_blank" rel="noopener">Ler</a>
+          <a class="btn btn-secondary btn-sm" href="${url}" download>Baixar</a>
+          ${aceite ? '' : `<button class="btn btn-primary btn-sm" onclick="aceitarPolitica('${c.token}','${p.id}','${p.versao}', this)">Confirmar leitura e aceite</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="container narrow">
+    <button class="btn btn-ghost btn-sm" onclick="location.hash='#/portal/${token}'">← Voltar</button>
+    <h1 class="section-title" style="margin-top:14px;">Políticas da Monumenta</h1>
+    <div class="section-sub">Leia, baixe e confirme a ciência das políticas internas. Você pode voltar aqui quando quiser.</div>
+    ${linhas}
+    <div class="hint" id="msgPoliticas"></div>
+  </div>`;
+}
+async function aceitarPolitica(token, politicaId, versao, btnEl){
+  const msg = document.getElementById('msgPoliticas');
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Confirmando...'; }
+  try{
+    const resp = await fetch(ONBOARDING_BRIDGE_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ acao:'aceite_politica', token, politicaId, versao }),
+    });
+    const result = await resp.json().catch(()=>({ok:false}));
+    if(!resp.ok || !result.ok) throw new Error(result.error || `Erro (HTTP ${resp.status})`);
+    const c = findByToken(token);
+    if(c) c.aceitesPoliticas = result.aceitesPoliticas || c.aceitesPoliticas;
+    document.getElementById('app').innerHTML = viewPortalPoliticas(token);
+    showToast('Aceite registrado');
+  }catch(e){
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Confirmar leitura e aceite'; }
+    if(msg){ msg.textContent = 'Não consegui registrar o aceite (' + e.message + ').'; msg.className = 'hint hint-err'; }
+  }
 }
 </script>
 </body>
