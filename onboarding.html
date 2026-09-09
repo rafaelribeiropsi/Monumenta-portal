@@ -439,14 +439,14 @@ function lerArquivoComoBase64(file){
   });
 }
 
-// Catálogo de políticas internas — PENDENTE: trocar pelos PDFs reais da
-// Monumenta (título + nome do arquivo). Os arquivos devem ser publicados na
-// pasta "politicas/" do mesmo repositório do GitHub Pages (Monumenta-portal).
-const POLITICAS_BASE_URL = 'https://rafaelribeiropsi.github.io/Monumenta-portal/politicas/';
+// Catálogo de políticas internas. Os PDFs devem estar publicados na raiz do
+// mesmo repositório do GitHub Pages (Monumenta-portal) — mais simples de
+// publicar do que criar uma subpasta.
+const POLITICAS_BASE_URL = 'https://rafaelribeiropsi.github.io/Monumenta-portal/';
 const POLITICAS_CATALOGO = [
-  { id:'codigo-conduta', titulo:'Código de Conduta', arquivo:'codigo-de-conduta.pdf', versao:'2026-01' },
-  { id:'seguranca-informacao', titulo:'Política de Segurança da Informação', arquivo:'politica-seguranca-informacao.pdf', versao:'2026-01' },
-  { id:'rh-beneficios', titulo:'Políticas de RH e Benefícios', arquivo:'politicas-rh-beneficios.pdf', versao:'2026-01' },
+  { id:'rh-conduta', titulo:'Política de Recursos Humanos e Código de Conduta', arquivo:'politica-rh-conduta.pdf', versao:'2026-09' },
+  { id:'seguranca-informacao-ti', titulo:'Política de Segurança da Informação e Tecnologia da Informação', arquivo:'politica-seguranca-informacao-ti.pdf', versao:'2026-09' },
+  { id:'financeira-despesas', titulo:'Política Financeira e de Despesas', arquivo:'politica-financeira-despesas.pdf', versao:'2026-09' },
 ];
 
 function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,8); }
@@ -1929,7 +1929,3 @@ async function aceitarPolitica(token, politicaId, versao, btnEl){
     if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Confirmar leitura e aceite'; }
     if(msg){ msg.textContent = 'Não consegui registrar o aceite (' + e.message + ').'; msg.className = 'hint hint-err'; }
   }
-}
-</script>
-</body>
-</html>
